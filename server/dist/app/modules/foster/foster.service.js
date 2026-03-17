@@ -1,0 +1,74 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.returnPetFromFoster = exports.assignPetToFoster = exports.approveFoster = exports.registerFoster = exports.getAssignments = void 0;
+const foster_model_1 = require("./foster.model");
+const pet_model_1 = require("../pet/pet.model");
+const user_model_1 = require("../user/user.model");
+const notification_service_1 = require("../notification/notification.service");
+const getAssignments = async (userId, role) => {
+    const query = role === "Adopter" ? { fosterParent: userId } : {};
+    return foster_model_1.FosterAssignment.find(query)
+        .populate("pet")
+        .populate("fosterParent")
+        .populate("assignedBy")
+        .sort({ createdAt: -1 });
+};
+exports.getAssignments = getAssignments;
+const registerFoster = async (userId) => {
+    const user = await user_model_1.User.findById(userId);
+    if (!user)
+        throw new Error("User not found");
+    user.isFosterApproved = false;
+    await user.save();
+    await (0, notification_service_1.createNotification)(userId, "Foster registration submitted", "Your foster registration has been recorded and is awaiting review.");
+    return user;
+};
+exports.registerFoster = registerFoster;
+const approveFoster = async (userId) => {
+    const user = await user_model_1.User.findById(userId);
+    if (!user)
+        throw new Error("User not found");
+    user.isFosterApproved = true;
+    await user.save();
+    await (0, notification_service_1.createNotification)(userId, "Foster registration approved", "You can now be assigned pets for foster placement.");
+    return user;
+};
+exports.approveFoster = approveFoster;
+const assignPetToFoster = async (data, staffId) => {
+    const assignment = await foster_model_1.FosterAssignment.create({
+        pet: data.pet || data.petId,
+        fosterParent: data.fosterParent || data.fosterParentId,
+        startDate: data.startDate,
+        expectedEndDate: data.expectedEndDate,
+        notes: data.notes,
+        assignedBy: staffId
+    });
+    await pet_model_1.Pet.findByIdAndUpdate(data.pet || data.petId, {
+        status: "foster_placed"
+    });
+    const populatedAssignment = await foster_model_1.FosterAssignment.findById(assignment._id)
+        .populate("pet")
+        .populate("fosterParent")
+        .populate("assignedBy");
+    const fosterParentId = (data.fosterParent || data.fosterParentId);
+    await (0, notification_service_1.createNotification)(fosterParentId, "New foster assignment", "A pet has been assigned to you for foster care.");
+    return populatedAssignment;
+};
+exports.assignPetToFoster = assignPetToFoster;
+const returnPetFromFoster = async (assignmentId) => {
+    const assignment = await foster_model_1.FosterAssignment.findById(assignmentId);
+    if (!assignment)
+        throw new Error("Assignment not found");
+    assignment.status = "completed";
+    assignment.actualEndDate = new Date();
+    await assignment.save();
+    await pet_model_1.Pet.findByIdAndUpdate(assignment.pet, {
+        status: "available"
+    });
+    return foster_model_1.FosterAssignment.findById(assignment._id)
+        .populate("pet")
+        .populate("fosterParent")
+        .populate("assignedBy");
+};
+exports.returnPetFromFoster = returnPetFromFoster;
+//# sourceMappingURL=foster.service.js.map
