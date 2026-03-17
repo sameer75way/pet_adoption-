@@ -35,6 +35,7 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.setPrimaryPhotoController = exports.deletePetPhotoController = exports.uploadPetPhotoController = exports.updatePetStatusController = exports.deletePetController = exports.updatePetController = exports.getPetByIdController = exports.getPetsController = exports.createPetController = void 0;
 const petService = __importStar(require("./pet.service"));
+const socket_1 = require("../message/socket");
 /* =========================
    CREATE PET
 ========================= */
@@ -49,6 +50,7 @@ const createPetController = async (req, res, next) => {
             success: true,
             data: pet
         });
+        (0, socket_1.emitPetsUpdated)({ type: "created", pet });
     }
     catch (error) {
         next(error);
@@ -73,6 +75,7 @@ const getPetByIdController = async (req, res, next) => {
             success: true,
             data: pet
         });
+        (0, socket_1.emitPetsUpdated)({ type: "updated", pet });
     }
     catch (error) {
         next(error);
@@ -89,6 +92,7 @@ const updatePetController = async (req, res, next) => {
             success: true,
             data: pet
         });
+        (0, socket_1.emitPetsUpdated)({ type: "deleted", petId: req.params.id });
     }
     catch (error) {
         next(error);
@@ -105,6 +109,7 @@ const deletePetController = async (req, res, next) => {
             success: true,
             data: pet
         });
+        (0, socket_1.emitPetsUpdated)({ type: "status", pet });
     }
     catch (error) {
         next(error);
@@ -122,6 +127,7 @@ const updatePetStatusController = async (req, res, next) => {
             success: true,
             data: pet
         });
+        (0, socket_1.emitPetsUpdated)({ type: "updated", pet });
     }
     catch (error) {
         next(error);
@@ -144,6 +150,7 @@ const uploadPetPhotoController = async (req, res, next) => {
             success: true,
             data: pet
         });
+        (0, socket_1.emitPetsUpdated)({ type: "updated", pet });
     }
     catch (error) {
         next(error);
@@ -160,6 +167,7 @@ const deletePetPhotoController = async (req, res, next) => {
             success: true,
             data: pet
         });
+        (0, socket_1.emitPetsUpdated)({ type: "updated", pet });
     }
     catch (error) {
         next(error);

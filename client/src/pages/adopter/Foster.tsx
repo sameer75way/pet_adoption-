@@ -16,6 +16,7 @@ import { motion } from "framer-motion";
 import api from "../../services/api";
 import type { AppDispatch, RootState } from "../../app/store";
 import { fetchCurrentUser } from "../../features/auth/authSlice";
+import { getSocket } from "../../services/socket";
 
 interface FosterAssignmentView {
   _id: string;
@@ -52,6 +53,42 @@ const FosterPage = () => {
       void loadAssignments();
     });
   }, []);
+
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket || !user?._id) return;
+
+    const handleApplicantUpdated = (updatedUser: {
+      _id: string;
+      isFosterApproved?: boolean;
+      fosterRegistrationSubmitted?: boolean;
+    }) => {
+      if (updatedUser._id === user._id) {
+        void dispatch(fetchCurrentUser());
+      }
+    };
+
+    const handleAssignmentUpdated = (assignment: FosterAssignmentView) => {
+      setAssignments((current) => {
+        const index = current.findIndex((item) => item._id === assignment._id);
+        if (index === -1) {
+          return [assignment, ...current];
+        }
+
+        const next = [...current];
+        next[index] = assignment;
+        return next;
+      });
+    };
+
+    socket.on("foster:applicant-updated", handleApplicantUpdated);
+    socket.on("foster:assignment-updated", handleAssignmentUpdated);
+
+    return () => {
+      socket.off("foster:applicant-updated", handleApplicantUpdated);
+      socket.off("foster:assignment-updated", handleAssignmentUpdated);
+    };
+  }, [dispatch, user?._id]);
 
   const handleRegister = async () => {
     setSubmitting(true);

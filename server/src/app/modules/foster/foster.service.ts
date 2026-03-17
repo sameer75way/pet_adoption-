@@ -2,6 +2,7 @@ import { FosterAssignment } from "./foster.model";
 import { Pet } from "../pet/pet.model";
 import { User } from "../user/user.model";
 import { createNotification } from "../notification/notification.service";
+import { emitPetsUpdated, emitToRoles, emitToUser } from "../message/socket";
 
 export const getApplicants = async () => {
   return User.find({
@@ -48,6 +49,9 @@ export const registerFoster = async (userId: string) => {
     "Your foster registration has been recorded and is awaiting review."
   );
 
+  emitToRoles(["Admin", "Staff"], "foster:applicant-updated", user);
+  emitToUser(userId, "foster:applicant-updated", user);
+
   return user;
 
 };
@@ -68,6 +72,9 @@ export const approveFoster = async (userId: string) => {
     "Foster registration approved",
     "You can now be assigned pets for foster placement."
   );
+
+  emitToRoles(["Admin", "Staff"], "foster:applicant-updated", user);
+  emitToUser(userId, "foster:applicant-updated", user);
 
   return user;
 
@@ -103,6 +110,14 @@ export const assignPetToFoster = async (
     "A pet has been assigned to you for foster care."
   );
 
+  emitToUser(fosterParentId, "foster:assignment-updated", populatedAssignment);
+  emitToRoles(["Admin", "Staff"], "foster:assignment-updated", populatedAssignment);
+  emitPetsUpdated({
+    type: "status",
+    petId: data.pet || data.petId,
+    status: "foster_placed"
+  });
+
   return populatedAssignment;
 
 };
@@ -124,9 +139,25 @@ export const returnPetFromFoster = async (assignmentId: string) => {
     status: "available"
   });
 
-  return FosterAssignment.findById(assignment._id)
+  const populatedAssignment = await FosterAssignment.findById(assignment._id)
     .populate("pet")
     .populate("fosterParent")
     .populate("assignedBy");
+
+  if (populatedAssignment?.fosterParent) {
+    const fosterParentId =
+      (populatedAssignment.fosterParent as any)?._id?.toString?.() ||
+      populatedAssignment.fosterParent.toString();
+    emitToUser(fosterParentId, "foster:assignment-updated", populatedAssignment);
+  }
+
+  emitToRoles(["Admin", "Staff"], "foster:assignment-updated", populatedAssignment);
+  emitPetsUpdated({
+    type: "status",
+    petId: assignment.pet,
+    status: "available"
+  });
+
+  return populatedAssignment;
 
 };

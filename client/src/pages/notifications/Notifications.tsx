@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { motion } from "framer-motion";
 import api from "../../services/api";
+import { getSocket } from "../../services/socket";
 
 interface NotificationItem {
   _id: string;
@@ -37,6 +38,34 @@ const NotificationsPage = () => {
     };
 
     void loadNotifications();
+  }, []);
+
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleNotificationNew = (notification: NotificationItem) => {
+      setNotifications((current) => {
+        if (current.some((item) => item._id === notification._id)) {
+          return current;
+        }
+        return [notification, ...current];
+      });
+    };
+
+    const handleNotificationUpdated = (notification: NotificationItem) => {
+      setNotifications((current) =>
+        current.map((item) => (item._id === notification._id ? notification : item))
+      );
+    };
+
+    socket.on("notification:new", handleNotificationNew);
+    socket.on("notification:updated", handleNotificationUpdated);
+
+    return () => {
+      socket.off("notification:new", handleNotificationNew);
+      socket.off("notification:updated", handleNotificationUpdated);
+    };
   }, []);
 
   const markAsRead = async (id: string) => {

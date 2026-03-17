@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import * as petService from "./pet.service";
+import { emitPetsUpdated } from "../message/socket";
 
 /* =========================
    CREATE PET
@@ -20,6 +21,7 @@ export const createPetController = async (
       success: true,
       data: pet
     });
+    emitPetsUpdated({ type: "created", pet });
   } catch (error) {
     next(error);
   }
@@ -55,6 +57,7 @@ export const getPetByIdController = async (
       success: true,
       data: pet
     });
+    emitPetsUpdated({ type: "updated", pet });
   } catch (error) {
     next(error);
   }
@@ -78,6 +81,7 @@ export const updatePetController = async (
       success: true,
       data: pet
     });
+    emitPetsUpdated({ type: "deleted", petId: req.params.id as string });
   } catch (error) {
     next(error);
   }
@@ -98,6 +102,7 @@ export const deletePetController = async (
       success: true,
       data: pet
     });
+    emitPetsUpdated({ type: "status", pet });
   } catch (error) {
     next(error);
   }
@@ -123,6 +128,7 @@ export const updatePetStatusController = async (
       success: true,
       data: pet
     });
+    emitPetsUpdated({ type: "updated", pet });
   } catch (error) {
     next(error);
   }
@@ -153,6 +159,7 @@ export const uploadPetPhotoController = async (
       success: true,
       data: pet
     });
+    emitPetsUpdated({ type: "updated", pet });
   } catch (error) {
     next(error);
   }
@@ -176,6 +183,7 @@ export const deletePetPhotoController = async (
       success: true,
       data: pet
     });
+    emitPetsUpdated({ type: "updated", pet });
   } catch (error) {
     next(error);
   }

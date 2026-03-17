@@ -3,6 +3,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendMessage = exports.getMessages = exports.createConversation = exports.getConversations = void 0;
 const message_model_1 = require("./message.model");
 const conversation_model_1 = require("./conversation.model");
+const socket_1 = require("./socket");
+const ensureConversationParticipant = async (conversationId, userId) => {
+    const conversation = await conversation_model_1.Conversation.findOne({
+        _id: conversationId,
+        participants: userId
+    });
+    if (!conversation) {
+        throw new Error("Conversation not found");
+    }
+    return conversation;
+};
 const getConversations = async (userId) => {
     return conversation_model_1.Conversation.find({
         participants: userId
@@ -32,7 +43,8 @@ const createConversation = async (userId, participantIds, relatedApplication) =>
         .populate("relatedApplication");
 };
 exports.createConversation = createConversation;
-const getMessages = async (conversationId) => {
+const getMessages = async (conversationId, userId) => {
+    await ensureConversationParticipant(conversationId, userId);
     return message_model_1.Message.find({
         conversation: conversationId
     })
@@ -41,6 +53,7 @@ const getMessages = async (conversationId) => {
 };
 exports.getMessages = getMessages;
 const sendMessage = async (conversationId, senderId, content) => {
+    await ensureConversationParticipant(conversationId, senderId);
     const message = await message_model_1.Message.create({
         conversation: conversationId,
         sender: senderId,
@@ -53,7 +66,19 @@ const sendMessage = async (conversationId, senderId, content) => {
             sentBy: senderId
         }
     });
-    return message_model_1.Message.findById(message._id).populate("sender");
+    const populatedMessage = await message_model_1.Message.findById(message._id).populate("sender");
+    const conversation = await conversation_model_1.Conversation.findById(conversationId).populate("participants");
+    (0, socket_1.emitToConversation)(conversationId, "message:received", populatedMessage);
+    if (conversation) {
+        (0, socket_1.emitToConversation)(conversationId, "conversation:updated", conversation);
+        conversation.participants.forEach((participant) => {
+            const participantId = participant?._id?.toString?.() || participant?.toString?.();
+            if (participantId) {
+                (0, socket_1.emitToUser)(participantId, "conversation:updated", conversation);
+            }
+        });
+    }
+    return populatedMessage;
 };
 exports.sendMessage = sendMessage;
 //# sourceMappingURL=message.service.js.map

@@ -27,6 +27,7 @@ import { Search, FilterList, Edit, Add } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import type { AppDispatch, RootState } from "../../app/store";
 import { fetchPets } from "../../features/pets/petSlice";
+import { getSocket } from "../../services/socket";
 
 const PetsList = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -65,6 +66,36 @@ const PetsList = () => {
       })
     );
   }, [dispatch, page, speciesFilter, breedFilter, sizeFilter, statusFilter, searchTerm, ageMin, ageMax, lat, lng, radius]);
+
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handlePetUpdated = () => {
+      dispatch(
+        fetchPets({
+          page,
+          limit: 12,
+          species: speciesFilter || undefined,
+          breed: breedFilter || undefined,
+          size: sizeFilter || undefined,
+          status: statusFilter || undefined,
+          search: searchTerm || undefined,
+          ageMin: ageMin ? Number(ageMin) : undefined,
+          ageMax: ageMax ? Number(ageMax) : undefined,
+          lat: lat ? Number(lat) : undefined,
+          lng: lng ? Number(lng) : undefined,
+          radius: radius ? Number(radius) : undefined,
+        })
+      );
+    };
+
+    socket.on("pet:updated", handlePetUpdated);
+
+    return () => {
+      socket.off("pet:updated", handlePetUpdated);
+    };
+  }, [ageMax, ageMin, breedFilter, dispatch, lat, lng, page, radius, searchTerm, sizeFilter, speciesFilter, statusFilter]);
 
   const handleSpeciesChange = (event: SelectChangeEvent) => {
     const value = event.target.value;

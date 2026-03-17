@@ -6,6 +6,7 @@ const pet_model_1 = require("../pet/pet.model");
 const user_model_1 = require("../user/user.model");
 const conversation_model_1 = require("../message/conversation.model");
 const notification_service_1 = require("../notification/notification.service");
+const socket_1 = require("../message/socket");
 const submitApplication = async (data, userId) => {
     const existing = await application_model_1.Application.findOne({
         pet: data.pet,
@@ -30,15 +31,20 @@ const submitApplication = async (data, userId) => {
         role: { $in: ["Admin", "Staff"] }
     });
     if (staffMember) {
-        await conversation_model_1.Conversation.create({
+        const conversation = await conversation_model_1.Conversation.create({
             participants: [application.applicant, staffMember._id],
             relatedApplication: application._id
         });
         await (0, notification_service_1.createNotification)(staffMember._id.toString(), "New adoption application", `A new application has been submitted for ${pet.name}.`);
     }
-    return application_model_1.Application.findById(application._id)
+    const populatedApplication = await application_model_1.Application.findById(application._id)
         .populate("pet")
         .populate("applicant");
+    (0, socket_1.emitToRoles)(["Admin", "Staff"], "application:submitted", populatedApplication);
+    if (populatedApplication?.applicant && typeof populatedApplication.applicant !== "string") {
+        (0, socket_1.emitToUser)(populatedApplication.applicant._id.toString(), "application:updated", populatedApplication);
+    }
+    return populatedApplication;
 };
 exports.submitApplication = submitApplication;
 const getMyApplications = async (userId) => {
@@ -105,7 +111,9 @@ const updateApplicationStatus = async (id, status, reason) => {
     if (populatedApplication?.applicant && typeof populatedApplication.applicant !== "string") {
         const applicantId = populatedApplication.applicant._id.toString();
         await (0, notification_service_1.createNotification)(applicantId, "Application status updated", `Your application is now ${application.status.replace("_", " ")}.`);
+        (0, socket_1.emitToUser)(applicantId, "application:updated", populatedApplication);
     }
+    (0, socket_1.emitToRoles)(["Admin", "Staff"], "application:updated", populatedApplication);
     return populatedApplication;
 };
 exports.updateApplicationStatus = updateApplicationStatus;

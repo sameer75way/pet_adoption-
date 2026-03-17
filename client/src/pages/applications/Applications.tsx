@@ -26,10 +26,13 @@ import { useDispatch } from "react-redux";
 import { motion } from "framer-motion";
 import type { AppDispatch, RootState } from "../../app/store";
 import {
+  type Application,
   fetchApplications,
   fetchMyApplications,
+  upsertApplicationRealtime,
   updateApplicationStatus,
 } from "../../features/applications/applicationSlice";
+import { getSocket } from "../../services/socket";
 
 const Applications = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -49,6 +52,23 @@ const Applications = () => {
       dispatch(fetchApplications({}));
     }
   }, [dispatch, isAdopter]);
+
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleApplicationUpdated = (application: Application) => {
+      dispatch(upsertApplicationRealtime(application));
+    };
+
+    socket.on("application:submitted", handleApplicationUpdated);
+    socket.on("application:updated", handleApplicationUpdated);
+
+    return () => {
+      socket.off("application:submitted", handleApplicationUpdated);
+      socket.off("application:updated", handleApplicationUpdated);
+    };
+  }, [dispatch]);
 
   const tableRows = (isAdopter ? myApplications : applications).map((application) => ({
     id: application._id,

@@ -35,9 +35,14 @@ var __importStar = (this && this.__importStar) || (function () {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getFavoritesController = exports.toggleFavoriteController = void 0;
 const favoriteService = __importStar(require("./favorite.service"));
+const socket_1 = require("../message/socket");
 const toggleFavoriteController = async (req, res) => {
     const user = req.user;
     const result = await favoriteService.toggleFavorite(user.id, req.params.petId);
+    (0, socket_1.emitToUser)(user.id, "favorite:updated", {
+        petId: req.params.petId,
+        ...result
+    });
     res.json({
         success: true,
         data: result

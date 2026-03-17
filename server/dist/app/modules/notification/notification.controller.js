@@ -45,7 +45,8 @@ const getNotificationsController = async (req, res) => {
 };
 exports.getNotificationsController = getNotificationsController;
 const markNotificationReadController = async (req, res) => {
-    const notification = await notificationService.markNotificationRead(req.params.id);
+    const user = req.user;
+    const notification = await notificationService.markNotificationRead(req.params.id, user.id);
     res.json({
         success: true,
         data: notification

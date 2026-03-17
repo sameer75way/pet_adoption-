@@ -18,8 +18,10 @@ export const markNotificationReadController = async (
   req: Request,
   res: Response
 ) => {
+  const user = (req as any).user;
   const notification = await notificationService.markNotificationRead(
-    req.params.id as string
+    req.params.id as string,
+    user.id
   );
 
   res.json({

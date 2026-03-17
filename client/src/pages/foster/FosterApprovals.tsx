@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { motion } from "framer-motion";
 import api from "../../services/api";
+import { getSocket } from "../../services/socket";
 
 interface FosterApplicant {
   _id: string;
@@ -40,6 +41,30 @@ const FosterApprovalsPage = () => {
     queueMicrotask(() => {
       void loadApplicants();
     });
+  }, []);
+
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleApplicantUpdated = (applicant: FosterApplicant) => {
+      setApplicants((current) => {
+        const index = current.findIndex((item) => item._id === applicant._id);
+        if (index === -1) {
+          return [applicant, ...current];
+        }
+
+        const next = [...current];
+        next[index] = applicant;
+        return next;
+      });
+    };
+
+    socket.on("foster:applicant-updated", handleApplicantUpdated);
+
+    return () => {
+      socket.off("foster:applicant-updated", handleApplicantUpdated);
+    };
   }, []);
 
   const approveApplicant = async (id: string) => {

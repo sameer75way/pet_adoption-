@@ -29,6 +29,7 @@ import type { RootState } from "../../app/store";
 import type { AppDispatch } from "../../app/store";
 import { logout } from "../../features/auth/authSlice";
 import api from "../../services/api";
+import { getSocket } from "../../services/socket";
 
 const HideOnScroll = ({ children }: { children: React.ReactElement }) => {
   const trigger = useScrollTrigger();
@@ -66,6 +67,29 @@ const Navbar = () => {
     void loadNotifications();
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket || !isAuthenticated) return;
+
+    const handleNotificationNew = () => {
+      setNotificationCount((current) => current + 1);
+    };
+
+    const handleNotificationUpdated = (notification: { isRead: boolean }) => {
+      if (notification.isRead) {
+        setNotificationCount((current) => Math.max(0, current - 1));
+      }
+    };
+
+    socket.on("notification:new", handleNotificationNew);
+    socket.on("notification:updated", handleNotificationUpdated);
+
+    return () => {
+      socket.off("notification:new", handleNotificationNew);
+      socket.off("notification:updated", handleNotificationUpdated);
+    };
+  }, [isAuthenticated]);
+
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -75,7 +99,7 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    dispatch(logout());
+    void dispatch(logout());
     handleClose();
     navigate("/");
   };

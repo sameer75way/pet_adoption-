@@ -39,10 +39,12 @@ export const getMessagesController = async (
   req: Request,
   res: Response
 ) => {
+  const user = (req as any).user;
 
   const messages =
     await messageService.getMessages(
-      req.params.conversationId as string
+      req.params.conversationId as string,
+      user.id
     );
 
   res.json({

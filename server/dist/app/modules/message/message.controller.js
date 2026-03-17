@@ -54,7 +54,8 @@ const createConversationController = async (req, res) => {
 };
 exports.createConversationController = createConversationController;
 const getMessagesController = async (req, res) => {
-    const messages = await messageService.getMessages(req.params.conversationId);
+    const user = req.user;
+    const messages = await messageService.getMessages(req.params.conversationId, user.id);
     res.json({
         success: true,
         data: messages

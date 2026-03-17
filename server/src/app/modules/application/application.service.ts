@@ -3,6 +3,7 @@ import { Pet } from "../pet/pet.model";
 import { User } from "../user/user.model";
 import { Conversation } from "../message/conversation.model";
 import { createNotification } from "../notification/notification.service";
+import { emitToRoles, emitToUser } from "../message/socket";
 
 export const submitApplication = async (
   data: any,
@@ -41,7 +42,7 @@ export const submitApplication = async (
   });
 
   if (staffMember) {
-    await Conversation.create({
+    const conversation = await Conversation.create({
       participants: [application.applicant, staffMember._id],
       relatedApplication: application._id
     });
@@ -53,10 +54,21 @@ export const submitApplication = async (
     );
   }
 
-  return Application.findById(application._id)
+  const populatedApplication = await Application.findById(application._id)
     .populate("pet")
     .populate("applicant");
 
+  emitToRoles(["Admin", "Staff"], "application:submitted", populatedApplication);
+
+  if (populatedApplication?.applicant && typeof populatedApplication.applicant !== "string") {
+    emitToUser(
+      populatedApplication.applicant._id.toString(),
+      "application:updated",
+      populatedApplication
+    );
+  }
+
+  return populatedApplication;
 };
 
 export const getMyApplications = async (userId: string) => {
@@ -154,7 +166,11 @@ export const updateApplicationStatus = async (
       "Application status updated",
       `Your application is now ${application.status.replace("_", " ")}.`
     );
+
+    emitToUser(applicantId, "application:updated", populatedApplication);
   }
+
+  emitToRoles(["Admin", "Staff"], "application:updated", populatedApplication);
 
   return populatedApplication;
 

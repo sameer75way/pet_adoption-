@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, type PayloadAction } from "@reduxjs/toolkit";
 import api from "../../services/api";
 
 export type ApplicationStatus =
@@ -125,6 +125,23 @@ const applicationSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    upsertApplicationRealtime: (state, action: PayloadAction<Application>) => {
+      const nextApplication = action.payload;
+      const appIndex = state.applications.findIndex((item) => item._id === nextApplication._id);
+      const myIndex = state.myApplications.findIndex((item) => item._id === nextApplication._id);
+
+      if (appIndex === -1) {
+        state.applications.unshift(nextApplication);
+      } else {
+        state.applications[appIndex] = nextApplication;
+      }
+
+      if (myIndex === -1) {
+        state.myApplications.unshift(nextApplication);
+      } else {
+        state.myApplications[myIndex] = nextApplication;
+      }
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -169,5 +186,5 @@ const applicationSlice = createSlice({
   },
 });
 
-export const { clearCurrentApplication, clearError } = applicationSlice.actions;
+export const { clearCurrentApplication, clearError, upsertApplicationRealtime } = applicationSlice.actions;
 export default applicationSlice.reducer;

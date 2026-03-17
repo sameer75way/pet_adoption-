@@ -27,6 +27,7 @@ import { motion } from "framer-motion";
 import type { AppDispatch, RootState } from "../../app/store";
 import { clearCurrentPet, fetchPetById } from "../../features/pets/petSlice";
 import api from "../../services/api";
+import { getSocket } from "../../services/socket";
 
 const PetDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -61,6 +62,32 @@ const PetDetail = () => {
       dispatch(clearCurrentPet());
     };
   }, [dispatch, id, isAuthenticated]);
+
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket || !id) return;
+
+    const handlePetUpdated = (payload: { pet?: { _id?: string }; petId?: string }) => {
+      const updatedPetId = payload.pet?._id || payload.petId;
+      if (updatedPetId === id) {
+        dispatch(fetchPetById(id));
+      }
+    };
+
+    const handleFavoriteUpdated = (payload: { petId: string; favorited: boolean }) => {
+      if (payload.petId === id) {
+        setIsFavorited(payload.favorited);
+      }
+    };
+
+    socket.on("pet:updated", handlePetUpdated);
+    socket.on("favorite:updated", handleFavoriteUpdated);
+
+    return () => {
+      socket.off("pet:updated", handlePetUpdated);
+      socket.off("favorite:updated", handleFavoriteUpdated);
+    };
+  }, [dispatch, id]);
 
   if (!pet && loading) {
     return (

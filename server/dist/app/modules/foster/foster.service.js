@@ -5,6 +5,7 @@ const foster_model_1 = require("./foster.model");
 const pet_model_1 = require("../pet/pet.model");
 const user_model_1 = require("../user/user.model");
 const notification_service_1 = require("../notification/notification.service");
+const socket_1 = require("../message/socket");
 const getApplicants = async () => {
     return user_model_1.User.find({
         role: "Adopter",
@@ -38,6 +39,8 @@ const registerFoster = async (userId) => {
     user.fosterRegistrationSubmitted = true;
     await user.save();
     await (0, notification_service_1.createNotification)(userId, "Foster registration submitted", "Your foster registration has been recorded and is awaiting review.");
+    (0, socket_1.emitToRoles)(["Admin", "Staff"], "foster:applicant-updated", user);
+    (0, socket_1.emitToUser)(userId, "foster:applicant-updated", user);
     return user;
 };
 exports.registerFoster = registerFoster;
@@ -49,6 +52,8 @@ const approveFoster = async (userId) => {
     user.fosterRegistrationSubmitted = false;
     await user.save();
     await (0, notification_service_1.createNotification)(userId, "Foster registration approved", "You can now be assigned pets for foster placement.");
+    (0, socket_1.emitToRoles)(["Admin", "Staff"], "foster:applicant-updated", user);
+    (0, socket_1.emitToUser)(userId, "foster:applicant-updated", user);
     return user;
 };
 exports.approveFoster = approveFoster;
@@ -70,6 +75,13 @@ const assignPetToFoster = async (data, staffId) => {
         .populate("assignedBy");
     const fosterParentId = (data.fosterParent || data.fosterParentId);
     await (0, notification_service_1.createNotification)(fosterParentId, "New foster assignment", "A pet has been assigned to you for foster care.");
+    (0, socket_1.emitToUser)(fosterParentId, "foster:assignment-updated", populatedAssignment);
+    (0, socket_1.emitToRoles)(["Admin", "Staff"], "foster:assignment-updated", populatedAssignment);
+    (0, socket_1.emitPetsUpdated)({
+        type: "status",
+        petId: data.pet || data.petId,
+        status: "foster_placed"
+    });
     return populatedAssignment;
 };
 exports.assignPetToFoster = assignPetToFoster;
@@ -83,10 +95,22 @@ const returnPetFromFoster = async (assignmentId) => {
     await pet_model_1.Pet.findByIdAndUpdate(assignment.pet, {
         status: "available"
     });
-    return foster_model_1.FosterAssignment.findById(assignment._id)
+    const populatedAssignment = await foster_model_1.FosterAssignment.findById(assignment._id)
         .populate("pet")
         .populate("fosterParent")
         .populate("assignedBy");
+    if (populatedAssignment?.fosterParent) {
+        const fosterParentId = populatedAssignment.fosterParent?._id?.toString?.() ||
+            populatedAssignment.fosterParent.toString();
+        (0, socket_1.emitToUser)(fosterParentId, "foster:assignment-updated", populatedAssignment);
+    }
+    (0, socket_1.emitToRoles)(["Admin", "Staff"], "foster:assignment-updated", populatedAssignment);
+    (0, socket_1.emitPetsUpdated)({
+        type: "status",
+        petId: assignment.pet,
+        status: "available"
+    });
+    return populatedAssignment;
 };
 exports.returnPetFromFoster = returnPetFromFoster;
 //# sourceMappingURL=foster.service.js.map

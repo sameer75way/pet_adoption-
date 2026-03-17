@@ -13,6 +13,7 @@ import {
 } from "@mui/material";
 import { motion } from "framer-motion";
 import api from "../../services/api";
+import { getSocket } from "../../services/socket";
 
 interface Conversation {
   _id: string;
@@ -47,12 +48,61 @@ const MessagesPage = () => {
   useEffect(() => {
     if (!selectedConversation) return;
 
+    const socket = getSocket();
+    socket?.emit("conversation:join", selectedConversation);
+
     const loadMessages = async () => {
       const response = await api.get(`/messages/${selectedConversation}`);
       setMessages(response.data.data);
     };
 
     loadMessages();
+
+    return () => {
+      socket?.emit("conversation:leave", selectedConversation);
+    };
+  }, [selectedConversation]);
+
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    const handleMessageReceived = (message: Message & { conversation?: string }) => {
+      if (message.conversation !== selectedConversation && selectedConversation) {
+        return;
+      }
+
+      setMessages((current) => {
+        if (current.some((item) => item._id === message._id)) {
+          return current;
+        }
+        return [...current, message];
+      });
+    };
+
+    const handleConversationUpdated = (conversation: Conversation) => {
+      setConversations((current) => {
+        const index = current.findIndex((item) => item._id === conversation._id);
+        if (index === -1) {
+          return [conversation, ...current];
+        }
+
+        const next = [...current];
+        next[index] = {
+          ...next[index],
+          ...conversation,
+        };
+        return next;
+      });
+    };
+
+    socket.on("message:received", handleMessageReceived);
+    socket.on("conversation:updated", handleConversationUpdated);
+
+    return () => {
+      socket.off("message:received", handleMessageReceived);
+      socket.off("conversation:updated", handleConversationUpdated);
+    };
   }, [selectedConversation]);
 
   const sendMessage = async () => {
@@ -61,7 +111,12 @@ const MessagesPage = () => {
     const response = await api.post(`/messages/${selectedConversation}`, {
       content: draft,
     });
-    setMessages((current) => [...current, response.data.data]);
+    setMessages((current) => {
+      if (current.some((message) => message._id === response.data.data._id)) {
+        return current;
+      }
+      return [...current, response.data.data];
+    });
     setDraft("");
   };
 

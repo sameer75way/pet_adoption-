@@ -1,5 +1,22 @@
 import { Message } from "./message.model";
 import { Conversation } from "./conversation.model";
+import { emitToConversation, emitToUser } from "./socket";
+
+const ensureConversationParticipant = async (
+  conversationId: string,
+  userId: string
+) => {
+  const conversation = await Conversation.findOne({
+    _id: conversationId,
+    participants: userId
+  });
+
+  if (!conversation) {
+    throw new Error("Conversation not found");
+  }
+
+  return conversation;
+};
 
 export const getConversations = async (userId: string) => {
 
@@ -40,7 +57,11 @@ export const createConversation = async (
     .populate("relatedApplication");
 };
 
-export const getMessages = async (conversationId: string) => {
+export const getMessages = async (
+  conversationId: string,
+  userId: string
+) => {
+  await ensureConversationParticipant(conversationId, userId);
 
   return Message.find({
     conversation: conversationId
@@ -55,6 +76,7 @@ export const sendMessage = async (
   senderId: string,
   content: string
 ) => {
+  await ensureConversationParticipant(conversationId, senderId);
 
   const message = await Message.create({
     conversation: conversationId,
@@ -70,6 +92,22 @@ export const sendMessage = async (
     }
   });
 
-  return Message.findById(message._id).populate("sender");
+  const populatedMessage = await Message.findById(message._id).populate("sender");
+  const conversation = await Conversation.findById(conversationId).populate("participants");
+
+  emitToConversation(conversationId, "message:received", populatedMessage);
+
+  if (conversation) {
+    emitToConversation(conversationId, "conversation:updated", conversation);
+
+    conversation.participants.forEach((participant: any) => {
+      const participantId = participant?._id?.toString?.() || participant?.toString?.();
+      if (participantId) {
+        emitToUser(participantId, "conversation:updated", conversation);
+      }
+    });
+  }
+
+  return populatedMessage;
 
 };

@@ -4,11 +4,36 @@ import { Provider } from "react-redux";
 import { SnackbarProvider } from "notistack";
 import { BrowserRouter } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { useSelector } from "react-redux";
 import { store } from "./app/store";
 import { theme } from "./theme";
 import AppRoutes from "./routes";
 import { fetchCurrentUser } from "./features/auth/authSlice";
 import SplashLoader from "./components/ui/SplashLoader";
+import type { RootState } from "./app/store";
+import { connectSocket, disconnectSocket } from "./services/socket";
+
+const RealtimeBridge = () => {
+  const { isAuthenticated, accessToken } = useSelector(
+    (state: RootState) => state.auth
+  );
+
+  useEffect(() => {
+    if (!isAuthenticated || !accessToken) {
+      disconnectSocket();
+      return;
+    }
+
+    const socket = connectSocket(accessToken);
+
+    return () => {
+      socket.disconnect();
+      disconnectSocket();
+    };
+  }, [accessToken, isAuthenticated]);
+
+  return null;
+};
 
 function App() {
   const [showSplash, setShowSplash] = useState(true);
@@ -45,6 +70,7 @@ function App() {
           autoHideDuration={3000}
         >
           <BrowserRouter>
+            <RealtimeBridge />
             {showSplash && <SplashLoader isExiting={isSplashExiting} />}
             {isAppReady && <AppRoutes />}
           </BrowserRouter>
