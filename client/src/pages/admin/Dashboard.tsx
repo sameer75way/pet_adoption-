@@ -17,6 +17,7 @@ import {
   Settings,
   Add,
   ArrowForward,
+  VolunteerActivism,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -62,6 +63,7 @@ const AdminDashboard = () => {
     { title: "Add New Pet", icon: <Add />, link: "/admin/pets/new", color: "primary" },
     { title: "Review Applications", icon: <Assessment />, link: "/admin/applications", color: "secondary" },
     { title: "Manage Users", icon: <People />, link: "/admin/users", color: "info" },
+    { title: "Approve Fosters", icon: <VolunteerActivism />, link: "/admin/fosters", color: "warning" },
     { title: "System Settings", icon: <Settings />, link: "/admin/settings", color: "warning" },
   ];
 

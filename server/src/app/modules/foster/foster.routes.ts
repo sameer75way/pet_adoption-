@@ -6,6 +6,13 @@ import { requireRole } from "../../common/middlewares/rbac.middleware";
 const router = Router();
 
 router.get(
+  "/applicants",
+  authMiddleware,
+  requireRole(["Admin", "Staff"]),
+  fosterController.getApplicantsController
+);
+
+router.get(
   "/assignments",
   authMiddleware,
   fosterController.getAssignmentsController

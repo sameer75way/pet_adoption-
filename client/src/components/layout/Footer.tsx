@@ -1,6 +1,6 @@
 import { Box, Container, Typography, Link, Grid } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import { Pets, Facebook, Twitter, Instagram } from "@mui/icons-material";
+import { Pets, Facebook, Twitter, Instagram, MailOutline, PlaceOutlined } from "@mui/icons-material";
 import { motion } from "framer-motion";
 
 const Footer = () => {
@@ -33,7 +33,7 @@ const Footer = () => {
     <Box
       component="footer"
       sx={{
-        background: "linear-gradient(135deg, #1e293b 0%, #334155 100%)",
+        background: "linear-gradient(135deg, #17393f 0%, #214f56 55%, #3f2d18 100%)",
         color: "white",
         py: 6,
         mt: "auto",
@@ -55,6 +55,12 @@ const Footer = () => {
               </Box>
               <Typography variant="body2" sx={{ color: "grey.400", mb: 2 }}>
                 Connecting loving families with pets in need of a forever home. Every adoption saves a life.
+              </Typography>
+              <Typography variant="body2" sx={{ color: "grey.400", display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+                <MailOutline fontSize="small" /> hello@petadopt.local
+              </Typography>
+              <Typography variant="body2" sx={{ color: "grey.400", display: "flex", alignItems: "center", gap: 1 }}>
+                <PlaceOutlined fontSize="small" /> New York shelter network
               </Typography>
               <Box sx={{ display: "flex", gap: 1 }}>
                 <Facebook sx={{ color: "grey.400", cursor: "pointer", "&:hover": { color: "primary.light" } }} />

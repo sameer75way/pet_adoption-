@@ -38,6 +38,7 @@ const fosterController = __importStar(require("./foster.controller"));
 const auth_middleware_1 = require("../../common/middlewares/auth.middleware");
 const rbac_middleware_1 = require("../../common/middlewares/rbac.middleware");
 const router = (0, express_1.Router)();
+router.get("/applicants", auth_middleware_1.authMiddleware, (0, rbac_middleware_1.requireRole)(["Admin", "Staff"]), fosterController.getApplicantsController);
 router.get("/assignments", auth_middleware_1.authMiddleware, fosterController.getAssignmentsController);
 router.post("/register", auth_middleware_1.authMiddleware, (0, rbac_middleware_1.requireRole)(["Adopter"]), fosterController.registerFosterController);
 router.patch("/:id/approve", auth_middleware_1.authMiddleware, (0, rbac_middleware_1.requireRole)(["Admin", "Staff"]), fosterController.approveFosterController);

@@ -32,5 +32,18 @@ router.get("/", auth_middleware_1.authMiddleware, (0, rbac_middleware_1.requireR
         res.status(500).json({ message: "Server error" });
     }
 });
+// Verify user account (Admin only)
+router.patch("/:id/verify", auth_middleware_1.authMiddleware, (0, rbac_middleware_1.requireRole)(["Admin"]), async (req, res) => {
+    try {
+        const user = await user_model_1.User.findByIdAndUpdate(req.params.id, { isVerified: true }, { new: true }).select("-password");
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.json({ success: true, data: user });
+    }
+    catch (error) {
+        res.status(500).json({ message: "Server error" });
+    }
+});
 exports.default = router;
 //# sourceMappingURL=user.routes.js.map

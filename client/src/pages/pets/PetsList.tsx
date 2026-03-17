@@ -19,6 +19,8 @@ import {
   Pagination,
   Collapse,
   Stack,
+  Divider,
+  InputAdornment,
 } from "@mui/material";
 import type { SelectChangeEvent } from "@mui/material";
 import { Search, FilterList, Edit, Add } from "@mui/icons-material";
@@ -41,6 +43,7 @@ const PetsList = () => {
   const [lat, setLat] = useState("");
   const [lng, setLng] = useState("");
   const [radius, setRadius] = useState("");
+  const [sortBy, setSortBy] = useState("newest");
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [page, setPage] = useState(1);
 
@@ -78,8 +81,23 @@ const PetsList = () => {
     const matchesAgeMax = ageMax === "" || pet.age.years <= Number(ageMax);
     return matchesSearch && matchesSpecies && matchesBreed && matchesSize && matchesStatus && matchesAgeMin && matchesAgeMax;
   });
+  const sortedPets = [...filteredPets].sort((a, b) => {
+    switch (sortBy) {
+      case "oldest":
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      case "name_asc":
+        return a.name.localeCompare(b.name);
+      case "age_young":
+        return a.age.years - b.age.years || a.age.months - b.age.months;
+      case "age_old":
+        return b.age.years - a.age.years || b.age.months - a.age.months;
+      default:
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    }
+  });
 
   const canManagePets = user?.role === "Admin" || user?.role === "Staff";
+  const availableCount = pets.filter((pet) => pet.status === "available").length;
 
   const resetFilters = () => {
     setSearchTerm("");
@@ -123,13 +141,57 @@ const PetsList = () => {
           )}
         </Stack>
 
+        <Card sx={{ mb: 4, p: 0, overflow: "hidden" }}>
+          <Box
+            sx={{
+              px: { xs: 2, md: 3 },
+              py: 2.5,
+              background: "linear-gradient(135deg, rgba(31,111,120,0.08) 0%, rgba(217,119,6,0.08) 100%)",
+            }}
+          >
+            <Stack direction={{ xs: "column", md: "row" }} spacing={2} justifyContent="space-between" alignItems={{ xs: "flex-start", md: "center" }}>
+              <Box>
+                <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
+                  Search With More Intention
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Filter by species, age, size, status, or shelter location to find a better match faster.
+                </Typography>
+              </Box>
+              <Stack
+                direction="row"
+                spacing={1.25}
+                divider={<Divider orientation="vertical" flexItem />}
+                sx={{ flexWrap: "wrap", rowGap: 1 }}
+              >
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Visible</Typography>
+                  <Typography variant="h6">{filteredPets.length}</Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Available</Typography>
+                  <Typography variant="h6">{availableCount}</Typography>
+                </Box>
+                <Box>
+                  <Typography variant="caption" color="text.secondary">Pages</Typography>
+                  <Typography variant="h6">{totalPages}</Typography>
+                </Box>
+              </Stack>
+            </Stack>
+          </Box>
+        </Card>
+
         <Box sx={{ display: "flex", gap: 2, mb: 4, flexWrap: "wrap" }}>
           <TextField
             placeholder="Search by name or breed..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             InputProps={{
-              startAdornment: <Search color="action" sx={{ mr: 1 }} />,
+              startAdornment: (
+                <InputAdornment position="start">
+                  <Search color="action" />
+                </InputAdornment>
+              ),
             }}
             sx={{ flexGrow: 1, minWidth: 250 }}
           />
@@ -151,6 +213,16 @@ const PetsList = () => {
           >
             {showAdvancedFilters ? "Hide Filters" : "More Filters"}
           </Button>
+          <FormControl sx={{ minWidth: 180 }}>
+            <InputLabel>Sort By</InputLabel>
+            <Select value={sortBy} label="Sort By" onChange={(event) => setSortBy(event.target.value)}>
+              <MenuItem value="newest">Newest First</MenuItem>
+              <MenuItem value="oldest">Oldest First</MenuItem>
+              <MenuItem value="name_asc">Name A-Z</MenuItem>
+              <MenuItem value="age_young">Youngest First</MenuItem>
+              <MenuItem value="age_old">Oldest Pets First</MenuItem>
+            </Select>
+          </FormControl>
         </Box>
 
         <Collapse in={showAdvancedFilters}>
@@ -217,7 +289,7 @@ const PetsList = () => {
         </Collapse>
 
         <Grid container spacing={3}>
-          {filteredPets.map((pet, index) => (
+          {sortedPets.map((pet, index) => (
             <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={pet._id}>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -230,7 +302,8 @@ const PetsList = () => {
                     display: "flex",
                     flexDirection: "column",
                     transition: "transform 0.2s",
-                    "&:hover": { transform: "translateY(-4px)" },
+                    overflow: "hidden",
+                    "&:hover": { transform: "translateY(-6px)" },
                   }}
                 >
                   <CardMedia
@@ -254,6 +327,19 @@ const PetsList = () => {
                     </Box>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
                       {pet.breed} • {pet.age.years}y {pet.age.months}m
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        mb: 1.5,
+                        color: "text.secondary",
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                      }}
+                    >
+                      {pet.description}
                     </Typography>
                     <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
                       {pet.temperament.slice(0, 2).map((trait) => (
@@ -283,7 +369,7 @@ const PetsList = () => {
             </Grid>
           ))}
         </Grid>
-        {filteredPets.length === 0 && (
+        {sortedPets.length === 0 && (
           <Typography align="center" color="text.secondary" sx={{ mt: 4 }}>
             No pets matched your search. Try adjusting the filters or add a new pet from the dashboard.
           </Typography>

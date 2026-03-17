@@ -1,6 +1,7 @@
 import {
   Avatar,
   Alert,
+  Button,
   CircularProgress,
   Card,
   CardContent,
@@ -14,7 +15,7 @@ import { motion } from "framer-motion";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../../app/store";
-import { fetchUsers } from "../../features/users/userSlice";
+import { fetchUsers, verifyUser } from "../../features/users/userSlice";
 
 const AdminUsers = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -58,16 +59,40 @@ const AdminUsers = () => {
                     <Chip label={user._id.slice(-6).toUpperCase()} variant="outlined" />
                     <Chip label={user.role} color="primary" />
                     <Chip
-                      label={user.isVerified ? "Verified" : "Pending"}
-                      color={user.isVerified ? "success" : "warning"}
+                      label={user.isVerified ? "Verified Account" : "Unverified Account"}
+                      color={user.isVerified ? "success" : "default"}
                       variant="outlined"
                     />
                     <Chip
-                      label={user.isFosterApproved ? "Foster Approved" : "Foster Not Approved"}
-                      color={user.isFosterApproved ? "info" : "default"}
+                      label={
+                        user.isFosterApproved
+                          ? "Foster Approved"
+                          : user.fosterRegistrationSubmitted
+                            ? "Foster Review Pending"
+                            : "Not a Foster"
+                      }
+                      color={
+                        user.isFosterApproved
+                          ? "info"
+                          : user.fosterRegistrationSubmitted
+                            ? "warning"
+                            : "default"
+                      }
                       variant="outlined"
                     />
                   </Stack>
+                  {!user.isVerified && (
+                    <Button
+                      variant="contained"
+                      size="small"
+                      sx={{ mt: 2 }}
+                      onClick={() => {
+                        dispatch(verifyUser(user._id));
+                      }}
+                    >
+                      Verify Account
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
             </Grid>

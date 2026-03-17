@@ -16,6 +16,7 @@ import {
   Add,
   ArrowForward,
   Healing,
+  VolunteerActivism,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -33,6 +34,7 @@ const StaffDashboard = () => {
   const quickActions = [
     { title: "Add New Pet", icon: <Add />, link: "/staff/pets/new", color: "primary" },
     { title: "Review Applications", icon: <Assignment />, link: "/staff/applications", color: "secondary" },
+    { title: "Approve Fosters", icon: <VolunteerActivism />, link: "/staff/fosters", color: "warning" },
     { title: "Medical Records", icon: <Healing />, link: "/staff/medical", color: "info" },
   ];
 
@@ -85,7 +87,7 @@ const StaffDashboard = () => {
         </Typography>
         <Grid container spacing={3}>
           {quickActions.map((action, index) => (
-            <Grid size={{ xs: 12, sm: 4 }} key={action.title}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }} key={action.title}>
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}

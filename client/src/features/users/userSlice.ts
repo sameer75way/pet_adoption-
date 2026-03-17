@@ -29,6 +29,19 @@ export const fetchUsers = createAsyncThunk(
   }
 );
 
+export const verifyUser = createAsyncThunk(
+  "users/verifyUser",
+  async (id: string, { rejectWithValue }) => {
+    try {
+      const response = await api.patch(`/users/${id}/verify`);
+      return response.data.data;
+    } catch (error: unknown) {
+      const err = error as { response?: { data?: { message?: string } } };
+      return rejectWithValue(err.response?.data?.message || "Failed to verify user");
+    }
+  }
+);
+
 const userSlice = createSlice({
   name: "users",
   initialState,
@@ -50,6 +63,12 @@ const userSlice = createSlice({
       .addCase(fetchUsers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
+      })
+      .addCase(verifyUser.fulfilled, (state, action) => {
+        const index = state.users.findIndex((user) => user._id === action.payload._id);
+        if (index !== -1) {
+          state.users[index] = action.payload;
+        }
       });
   },
 });

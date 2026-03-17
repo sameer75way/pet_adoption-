@@ -21,6 +21,8 @@ import PetEdit from "../pages/pets/PetEdit";
 import Applications from "../pages/applications/Applications";
 import AdoptionApplicationPage from "../pages/applications/Apply";
 import MessagesPage from "../pages/messages/Messages";
+import NotificationsPage from "../pages/notifications/Notifications";
+import FosterApprovalsPage from "../pages/foster/FosterApprovals";
 import AboutPage from "../pages/info/About";
 import ContactPage from "../pages/info/Contact";
 import FAQPage from "../pages/info/FAQ";
@@ -58,6 +60,9 @@ const AppRoutes = () => {
         <Route path="pets/:id" element={<PetDetail />} />
         <Route path="pets/:id/apply" element={<AdoptionApplicationPage />} />
         <Route path="messages" element={<MessagesPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="notifications" element={<NotificationsPage />} />
+        </Route>
         
         <Route element={<ProtectedRoute allowedRoles={["Admin"]} />}>
           <Route path="admin" element={<AdminDashboard />} />
@@ -65,6 +70,7 @@ const AppRoutes = () => {
           <Route path="admin/pets/new" element={<PetCreate />} />
           <Route path="admin/pets/:id/edit" element={<PetEdit />} />
           <Route path="admin/applications" element={<Applications />} />
+          <Route path="admin/fosters" element={<FosterApprovalsPage />} />
           <Route path="admin/users" element={<AdminUsers />} />
           <Route path="admin/settings" element={<AdminSettings />} />
         </Route>
@@ -75,6 +81,7 @@ const AppRoutes = () => {
           <Route path="staff/pets/new" element={<PetCreate />} />
           <Route path="staff/pets/:id/edit" element={<PetEdit />} />
           <Route path="staff/applications" element={<Applications />} />
+          <Route path="staff/fosters" element={<FosterApprovalsPage />} />
           <Route path="staff/medical" element={<StaffMedical />} />
         </Route>
         

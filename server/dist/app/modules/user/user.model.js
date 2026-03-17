@@ -28,6 +28,10 @@ const userSchema = new mongoose_1.Schema({
     isFosterApproved: {
         type: Boolean,
         default: false
+    },
+    fosterRegistrationSubmitted: {
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true });
 exports.User = (0, mongoose_1.model)("User", userSchema);

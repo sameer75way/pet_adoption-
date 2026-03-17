@@ -18,6 +18,18 @@ export const registerFosterController = async (
 
 };
 
+export const getApplicantsController = async (
+  req: Request,
+  res: Response
+) => {
+  const applicants = await fosterService.getApplicants();
+
+  res.json({
+    success: true,
+    data: applicants
+  });
+};
+
 export const getAssignmentsController = async (
   req: Request,
   res: Response

@@ -10,6 +10,7 @@ export interface User {
   role: UserRole;
   isVerified: boolean;
   isFosterApproved?: boolean;
+  fosterRegistrationSubmitted?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }

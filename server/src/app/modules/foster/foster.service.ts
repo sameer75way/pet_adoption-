@@ -3,6 +3,16 @@ import { Pet } from "../pet/pet.model";
 import { User } from "../user/user.model";
 import { createNotification } from "../notification/notification.service";
 
+export const getApplicants = async () => {
+  return User.find({
+    role: "Adopter",
+    $or: [
+      { fosterRegistrationSubmitted: true },
+      { isFosterApproved: true }
+    ]
+  }).select("-password");
+};
+
 export const getAssignments = async (userId: string, role: string) => {
   const query = role === "Adopter" ? { fosterParent: userId } : {};
 
@@ -19,7 +29,16 @@ export const registerFoster = async (userId: string) => {
 
   if (!user) throw new Error("User not found");
 
+  if (user.isFosterApproved) {
+    throw new Error("You are already approved as a foster parent");
+  }
+
+  if (user.fosterRegistrationSubmitted) {
+    throw new Error("Your foster registration is already under review");
+  }
+
   user.isFosterApproved = false;
+  user.fosterRegistrationSubmitted = true;
 
   await user.save();
 
@@ -40,6 +59,7 @@ export const approveFoster = async (userId: string) => {
   if (!user) throw new Error("User not found");
 
   user.isFosterApproved = true;
+  user.fosterRegistrationSubmitted = false;
 
   await user.save();
 

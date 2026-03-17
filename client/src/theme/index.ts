@@ -4,20 +4,20 @@ export const theme = createTheme({
   palette: {
     mode: "light",
     primary: {
-      main: "#6366f1",
-      light: "#818cf8",
-      dark: "#4f46e5",
+      main: "#1f6f78",
+      light: "#5aa6af",
+      dark: "#124f56",
       contrastText: "#ffffff",
     },
     secondary: {
-      main: "#ec4899",
-      light: "#f472b6",
-      dark: "#db2777",
+      main: "#d97706",
+      light: "#f3a73d",
+      dark: "#a85b00",
       contrastText: "#ffffff",
     },
     background: {
-      default: "#f8fafc",
-      paper: "#ffffff",
+      default: "#f4efe7",
+      paper: "#fffdf9",
     },
     error: {
       main: "#ef4444",
@@ -32,29 +32,29 @@ export const theme = createTheme({
       main: "#3b82f6",
     },
     text: {
-      primary: "#1e293b",
-      secondary: "#64748b",
+      primary: "#1b2b34",
+      secondary: "#5f6c72",
     },
   },
   typography: {
-    fontFamily: '"Inter", "Roboto", "Helvetica", "Arial", sans-serif',
+    fontFamily: '"Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif',
     h1: {
       fontWeight: 700,
-      fontSize: "2.5rem",
-      letterSpacing: "-0.025em",
+      fontSize: "3rem",
+      letterSpacing: "-0.04em",
     },
     h2: {
       fontWeight: 700,
-      fontSize: "2rem",
-      letterSpacing: "-0.025em",
+      fontSize: "2.35rem",
+      letterSpacing: "-0.04em",
     },
     h3: {
       fontWeight: 600,
-      fontSize: "1.5rem",
+      fontSize: "1.7rem",
     },
     h4: {
       fontWeight: 600,
-      fontSize: "1.25rem",
+      fontSize: "1.35rem",
     },
     h5: {
       fontWeight: 600,
@@ -70,44 +70,58 @@ export const theme = createTheme({
     },
   },
   shape: {
-    borderRadius: 12,
+    borderRadius: 18,
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          background:
+            "radial-gradient(circle at top left, rgba(31,111,120,0.12), transparent 28%), radial-gradient(circle at top right, rgba(217,119,6,0.12), transparent 24%), linear-gradient(180deg, #f8f4ee 0%, #f3ede2 100%)",
+        },
+        "::selection": {
+          backgroundColor: "rgba(31,111,120,0.18)",
+        },
+      },
+    },
     MuiButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
-          padding: "10px 20px",
+          borderRadius: 999,
+          padding: "10px 22px",
           boxShadow: "none",
+          letterSpacing: "0.01em",
           "&:hover": {
-            boxShadow: "0 4px 12px rgba(99, 102, 241, 0.3)",
+            boxShadow: "0 10px 20px rgba(18, 79, 86, 0.18)",
           },
         },
         containedPrimary: {
-          background: "linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)",
+          background: "linear-gradient(135deg, #1f6f78 0%, #165c64 100%)",
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 16,
-          boxShadow: "0 4px 20px rgba(0, 0, 0, 0.05)",
-          border: "1px solid rgba(226, 232, 240, 0.8)",
+          borderRadius: 24,
+          boxShadow: "0 18px 45px rgba(45, 57, 61, 0.08)",
+          border: "1px solid rgba(194, 182, 166, 0.35)",
+          backgroundImage:
+            "linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,251,246,0.98) 100%)",
         },
       },
     },
     MuiPaper: {
       styleOverrides: {
         root: {
-          borderRadius: 16,
+          borderRadius: 24,
         },
       },
     },
     MuiChip: {
       styleOverrides: {
         root: {
-          borderRadius: 6,
+          borderRadius: 999,
           fontWeight: 500,
         },
       },
@@ -116,7 +130,8 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           "& .MuiOutlinedInput-root": {
-            borderRadius: 10,
+            borderRadius: 16,
+            backgroundColor: "rgba(255,255,255,0.72)",
           },
         },
       },
@@ -125,10 +140,10 @@ export const theme = createTheme({
 });
 
 export const gradients = {
-  primary: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%)",
-  secondary: "linear-gradient(135deg, #ec4899 0%, #f472b6 100%)",
+  primary: "linear-gradient(135deg, #1f6f78 0%, #2f8c95 100%)",
+  secondary: "linear-gradient(135deg, #d97706 0%, #f0a43a 100%)",
   success: "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
   info: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
   warning: "linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)",
-  hero: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+  hero: "linear-gradient(135deg, #19474f 0%, #1f6f78 45%, #d97706 100%)",
 };

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -13,17 +13,22 @@ import {
   Box,
   useScrollTrigger,
   Slide,
+  Chip,
+  Badge,
 } from "@mui/material";
 import {
   Menu as MenuIcon,
   Pets,
   Dashboard,
   Logout,
+  AutoAwesome,
+  NotificationsNone,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import type { RootState } from "../../app/store";
 import type { AppDispatch } from "../../app/store";
 import { logout } from "../../features/auth/authSlice";
+import api from "../../services/api";
 
 const HideOnScroll = ({ children }: { children: React.ReactElement }) => {
   const trigger = useScrollTrigger();
@@ -40,6 +45,26 @@ const Navbar = () => {
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [mobileMenuAnchor, setMobileMenuAnchor] = useState<null | HTMLElement>(null);
+  const [notificationCount, setNotificationCount] = useState(0);
+
+  useEffect(() => {
+    const loadNotifications = async () => {
+      if (!isAuthenticated) {
+        setNotificationCount(0);
+        return;
+      }
+
+      try {
+        const response = await api.get("/notifications");
+        const notifications = response.data.data as Array<{ isRead: boolean }>;
+        setNotificationCount(notifications.filter((notification) => !notification.isRead).length);
+      } catch {
+        setNotificationCount(0);
+      }
+    };
+
+    void loadNotifications();
+  }, [isAuthenticated]);
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -74,12 +99,13 @@ const Navbar = () => {
         position="sticky"
         elevation={0}
         sx={{
-          background: "rgba(255, 255, 255, 0.8)",
-          backdropFilter: "blur(20px)",
-          borderBottom: "1px solid rgba(226, 232, 240, 0.6)",
+          background: "rgba(255, 251, 245, 0.76)",
+          backdropFilter: "blur(18px)",
+          borderBottom: "1px solid rgba(195, 180, 161, 0.35)",
+          boxShadow: "0 12px 30px rgba(27, 43, 52, 0.06)",
         }}
       >
-        <Toolbar sx={{ px: { xs: 2, md: 4 } }}>
+        <Toolbar sx={{ px: { xs: 2, md: 4 }, minHeight: 82 }}>
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
@@ -91,7 +117,7 @@ const Navbar = () => {
                 variant="h6"
                 sx={{
                   fontWeight: 700,
-                  background: "linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)",
+                  background: "linear-gradient(135deg, #1f6f78 0%, #d97706 100%)",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
                 }}
@@ -102,10 +128,28 @@ const Navbar = () => {
           </motion.div>
 
           <Box sx={{ flexGrow: 1 }} />
+          <Chip
+            icon={<AutoAwesome />}
+            label="Shelter-ready platform"
+            size="small"
+            sx={{
+              display: { xs: "none", lg: "inline-flex" },
+              mr: 2,
+              bgcolor: "rgba(31,111,120,0.08)",
+              color: "text.primary",
+              border: "1px solid rgba(31,111,120,0.18)",
+            }}
+          />
 
           <Box sx={{ display: { xs: "none", md: "flex" }, gap: 1, alignItems: "center" }}>
+            <Button component={Link} to="/" sx={{ color: "text.primary" }}>
+              Home
+            </Button>
             <Button component={Link} to="/pets" sx={{ color: "text.primary" }}>
               Browse Pets
+            </Button>
+            <Button component={Link} to="/stories" sx={{ color: "text.primary" }}>
+              Stories
             </Button>
             
             {isAuthenticated ? (
@@ -118,8 +162,13 @@ const Navbar = () => {
                 >
                   Dashboard
                 </Button>
+                <IconButton component={Link} to="/notifications" sx={{ color: "text.primary" }}>
+                  <Badge badgeContent={notificationCount} color="secondary">
+                    <NotificationsNone />
+                  </Badge>
+                </IconButton>
                 <IconButton onClick={handleMenu} sx={{ ml: 1 }}>
-                  <Avatar sx={{ bgcolor: "primary.main" }}>
+                  <Avatar sx={{ bgcolor: "secondary.main", color: "#fff" }}>
                     {user?.name?.charAt(0).toUpperCase()}
                   </Avatar>
                 </IconButton>
@@ -167,13 +216,22 @@ const Navbar = () => {
             onClose={() => setMobileMenuAnchor(null)}
             PaperProps={{ sx: { mt: 1.5, minWidth: 200 } }}
           >
+            <MenuItem component={Link} to="/" onClick={() => setMobileMenuAnchor(null)}>
+              Home
+            </MenuItem>
             <MenuItem component={Link} to="/pets" onClick={() => setMobileMenuAnchor(null)}>
               Browse Pets
+            </MenuItem>
+            <MenuItem component={Link} to="/stories" onClick={() => setMobileMenuAnchor(null)}>
+              Stories
             </MenuItem>
             {isAuthenticated ? (
               <>
                 <MenuItem component={Link} to={getDashboardLink()} onClick={() => setMobileMenuAnchor(null)}>
                   Dashboard
+                </MenuItem>
+                <MenuItem component={Link} to="/notifications" onClick={() => setMobileMenuAnchor(null)}>
+                  Notifications
                 </MenuItem>
                 <MenuItem onClick={handleLogout}>Logout</MenuItem>
               </>

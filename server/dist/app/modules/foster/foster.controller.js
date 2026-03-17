@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.returnPetController = exports.assignPetController = exports.approveFosterController = exports.getAssignmentsController = exports.registerFosterController = void 0;
+exports.returnPetController = exports.assignPetController = exports.approveFosterController = exports.getAssignmentsController = exports.getApplicantsController = exports.registerFosterController = void 0;
 const fosterService = __importStar(require("./foster.service"));
 const registerFosterController = async (req, res) => {
     const user = req.user;
@@ -44,6 +44,14 @@ const registerFosterController = async (req, res) => {
     });
 };
 exports.registerFosterController = registerFosterController;
+const getApplicantsController = async (req, res) => {
+    const applicants = await fosterService.getApplicants();
+    res.json({
+        success: true,
+        data: applicants
+    });
+};
+exports.getApplicantsController = getApplicantsController;
 const getAssignmentsController = async (req, res) => {
     const user = req.user;
     const assignments = await fosterService.getAssignments(user.id, user.role);

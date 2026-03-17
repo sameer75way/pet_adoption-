@@ -9,7 +9,8 @@ export interface IUser {
   role: UserRole;
   isVerified: boolean;
 
-  isFosterApproved: boolean;   
+  isFosterApproved: boolean;
+  fosterRegistrationSubmitted: boolean;
 }
 
 const userSchema = new Schema<IUser>(
@@ -37,6 +38,10 @@ const userSchema = new Schema<IUser>(
       default: false
     },
     isFosterApproved: {
+      type: Boolean,
+      default: false
+    },
+    fosterRegistrationSubmitted: {
       type: Boolean,
       default: false
     }
