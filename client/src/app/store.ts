@@ -6,6 +6,7 @@ import userReducer from "../features/users/userSlice";
 import medicalReducer from "../features/medical/medicalSlice";
 import fosterReducer from "../features/foster/fosterSlice";
 import notificationReducer from "../features/notifications/notificationSlice";
+import storyReducer from "../features/stories/storySlice";
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     medical: medicalReducer,
     foster: fosterReducer,
     notifications: notificationReducer,
+    stories: storyReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({

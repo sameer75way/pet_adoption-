@@ -10,6 +10,7 @@ import favoriteRoutes from "../modules/favorite/favorite.routes";
 import messageRoutes from "../modules/message/message.routes";
 import analyticsRoutes from "../modules/analytics/analytics.routes";
 import notificationRoutes from "../modules/notification/notification.routes";
+import storyRoutes from "../modules/story/story.routes";
 
 const router = Router();
 
@@ -53,6 +54,10 @@ const moduleRoutes = [
   {
     path: "/notifications",
     route: notificationRoutes
+  },
+  {
+    path: "/stories",
+    route: storyRoutes
   }
 ];
 

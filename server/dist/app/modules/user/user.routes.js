@@ -35,7 +35,7 @@ router.get("/", auth_middleware_1.authMiddleware, (0, rbac_middleware_1.requireR
 // Verify user account (Admin only)
 router.patch("/:id/verify", auth_middleware_1.authMiddleware, (0, rbac_middleware_1.requireRole)(["Admin"]), async (req, res) => {
     try {
-        const user = await user_model_1.User.findByIdAndUpdate(req.params.id, { isVerified: true }, { new: true }).select("-password");
+        const user = await user_model_1.User.findByIdAndUpdate(req.params.id, { isVerified: true }, { returnDocument: "after" }).select("-password");
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }

@@ -16,7 +16,7 @@ const getNotifications = async (userId) => {
 };
 exports.getNotifications = getNotifications;
 const markNotificationRead = async (notificationId) => {
-    return notification_model_1.Notification.findByIdAndUpdate(notificationId, { isRead: true }, { new: true });
+    return notification_model_1.Notification.findByIdAndUpdate(notificationId, { isRead: true }, { returnDocument: "after" });
 };
 exports.markNotificationRead = markNotificationRead;
 //# sourceMappingURL=notification.service.js.map

@@ -38,7 +38,7 @@ router.patch("/:id/verify", authMiddleware, requireRole(["Admin"]), async (req, 
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { isVerified: true },
-      { new: true }
+      { returnDocument: "after" }
     ).select("-password");
 
     if (!user) {

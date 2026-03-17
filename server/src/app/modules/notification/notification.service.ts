@@ -25,6 +25,6 @@ export const markNotificationRead = async (notificationId: string) => {
   return Notification.findByIdAndUpdate(
     notificationId,
     { isRead: true },
-    { new: true }
+    { returnDocument: "after" }
   );
 };

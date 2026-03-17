@@ -14,6 +14,7 @@ const favorite_routes_1 = __importDefault(require("../modules/favorite/favorite.
 const message_routes_1 = __importDefault(require("../modules/message/message.routes"));
 const analytics_routes_1 = __importDefault(require("../modules/analytics/analytics.routes"));
 const notification_routes_1 = __importDefault(require("../modules/notification/notification.routes"));
+const story_routes_1 = __importDefault(require("../modules/story/story.routes"));
 const router = (0, express_1.Router)();
 const moduleRoutes = [
     {
@@ -55,6 +56,10 @@ const moduleRoutes = [
     {
         path: "/notifications",
         route: notification_routes_1.default
+    },
+    {
+        path: "/stories",
+        route: story_routes_1.default
     }
 ];
 moduleRoutes.forEach((route) => {

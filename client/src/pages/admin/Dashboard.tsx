@@ -18,6 +18,7 @@ import {
   Add,
   ArrowForward,
   VolunteerActivism,
+  AutoStories,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -64,6 +65,7 @@ const AdminDashboard = () => {
     { title: "Review Applications", icon: <Assessment />, link: "/admin/applications", color: "secondary" },
     { title: "Manage Users", icon: <People />, link: "/admin/users", color: "info" },
     { title: "Approve Fosters", icon: <VolunteerActivism />, link: "/admin/fosters", color: "warning" },
+    { title: "Add Story", icon: <AutoStories />, link: "/admin/stories", color: "info" },
     { title: "System Settings", icon: <Settings />, link: "/admin/settings", color: "warning" },
   ];
 

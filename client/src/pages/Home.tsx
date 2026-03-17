@@ -13,15 +13,16 @@ import {
   Stack,
 } from "@mui/material";
 import { Favorite, ArrowForward, Pets, VolunteerActivism, Home as HomeIcon, Diversity3, HealthAndSafety, CheckCircle } from "@mui/icons-material";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import type { AppDispatch, RootState } from "../app/store";
 import { fetchPets } from "../features/pets/petSlice";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 const Home = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { pets } = useSelector((state: RootState) => state.pets);
+  const heroRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     dispatch(fetchPets({ limit: 6 }));
@@ -41,10 +42,26 @@ const Home = () => {
     { icon: <Diversity3 />, label: "Match-focused adoption" },
     { icon: <CheckCircle />, label: "Staff-reviewed applications" },
   ];
+  const floatingCards = [
+    { title: "Fast Match", subtitle: "Filter by temperament, care stage, and home fit", x: "6%", y: "18%" },
+    { title: "Live Pipeline", subtitle: "Track applications, fosters, and updates", x: "76%", y: "22%" },
+    { title: "Shelter Safe", subtitle: "Designed for real rescue workflows", x: "64%", y: "76%" },
+  ];
+  const { scrollYProgress } = useScroll({
+    target: heroRef,
+    offset: ["start start", "end start"],
+  });
+  const heroTextY = useTransform(scrollYProgress, [0, 1], [0, 72]);
+  const heroImageY = useTransform(scrollYProgress, [0, 1], [0, 120]);
+  const backgroundY = useTransform(scrollYProgress, [0, 1], [0, -80]);
+  const floatingYOne = useTransform(scrollYProgress, [0, 1], [0, 110]);
+  const floatingYTwo = useTransform(scrollYProgress, [0, 1], [0, 70]);
+  const floatingYThree = useTransform(scrollYProgress, [0, 1], [0, 145]);
 
   return (
     <Box>
       <Box
+        ref={heroRef}
         sx={{
           background: "linear-gradient(135deg, #19474f 0%, #1f6f78 45%, #d97706 100%)",
           color: "white",
@@ -53,18 +70,57 @@ const Home = () => {
           overflow: "hidden",
         }}
       >
-        <Box
+        <motion.div
+          style={{ y: backgroundY }}
+        >
+          <Box
           sx={{
             position: "absolute",
             inset: 0,
             background:
               "radial-gradient(circle at 10% 20%, rgba(255,255,255,0.16), transparent 20%), radial-gradient(circle at 80% 15%, rgba(255,255,255,0.14), transparent 18%), linear-gradient(transparent, rgba(0,0,0,0.08))",
           }}
-        />
+          />
+        </motion.div>
+        {floatingCards.map((card, index) => (
+          <motion.div
+            key={card.title}
+            animate={{ y: [0, -14, 0], rotate: [0, index % 2 === 0 ? -2 : 2, 0] }}
+            transition={{ duration: 6 + index, repeat: Infinity, ease: "easeInOut" }}
+            style={{
+              position: "absolute",
+              left: card.x,
+              top: card.y,
+              zIndex: 0,
+              y: index === 0 ? floatingYOne : index === 1 ? floatingYTwo : floatingYThree,
+            }}
+          >
+            <Box
+              sx={{
+                display: { xs: "none", xl: "block" },
+                width: 190,
+                p: 1.75,
+                borderRadius: 4,
+                background: "rgba(255,255,255,0.12)",
+                border: "1px solid rgba(255,255,255,0.18)",
+                boxShadow: "0 18px 50px rgba(0,0,0,0.14)",
+                backdropFilter: "blur(12px)",
+                color: "#fff",
+              }}
+            >
+              <Typography variant="subtitle2" sx={{ fontWeight: 700 }}>
+                {card.title}
+              </Typography>
+              <Typography variant="caption" sx={{ opacity: 0.86 }}>
+                {card.subtitle}
+              </Typography>
+            </Box>
+          </motion.div>
+        ))}
         <Container maxWidth="lg">
           <Grid container spacing={4} alignItems="center">
             <Grid size={{ xs: 12, md: 6 }}>
-              <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+              <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} style={{ y: heroTextY }}>
                 <Chip
                   label="Trusted by shelters, staff, and adopters"
                   sx={{
@@ -121,34 +177,49 @@ const Home = () => {
               </motion.div>
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.6, delay: 0.2 }}>
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                style={{ y: heroImageY }}
+              >
                 <Grid container spacing={2}>
                   <Grid size={{ xs: 12, sm: 7 }}>
-                    <Box
-                      component="img"
-                      src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=900"
-                      alt="Happy pets"
-                      sx={{ width: "100%", height: { xs: 260, sm: 420 }, objectFit: "cover", borderRadius: 6, boxShadow: "0 24px 70px rgba(0,0,0,0.28)" }}
-                    />
+                    <motion.div
+                      animate={{ rotateX: [0, 5, 0], rotateY: [0, -6, 0] }}
+                      transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+                      style={{ transformStyle: "preserve-3d", perspective: 1200 }}
+                    >
+                      <Box
+                        component="img"
+                        src="https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=900"
+                        alt="Happy pets"
+                        sx={{ width: "100%", height: { xs: 260, sm: 420 }, objectFit: "cover", borderRadius: 6, boxShadow: "0 24px 70px rgba(0,0,0,0.28)" }}
+                      />
+                    </motion.div>
                   </Grid>
                   <Grid size={{ xs: 12, sm: 5 }}>
                     <Stack spacing={2}>
-                      <Card sx={{ bgcolor: "rgba(255,255,255,0.14)", color: "#000000", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.18)" }}>
-                        <CardContent>
-                          <Typography variant="overline" sx={{ opacity: 0.8 }}>
-                            Available Pets
-                          </Typography>
-                          <Typography variant="h3">{availablePets}</Typography>
-                        </CardContent>
-                      </Card>
-                      <Card sx={{ bgcolor: "rgba(255,255,255,0.14)", color: "#000000", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.18)" }}>
-                        <CardContent>
-                          <Typography variant="overline" sx={{ opacity: 0.8 }}>
-                            Adopted Through Platform
-                          </Typography>
-                          <Typography variant="h3">{adoptedPets}</Typography>
-                        </CardContent>
-                      </Card>
+                      <motion.div animate={{ y: [0, -10, 0] }} transition={{ duration: 5.2, repeat: Infinity, ease: "easeInOut" }}>
+                        <Card sx={{ bgcolor: "rgba(255,255,255,0.14)", color: "#000000", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.18)" }}>
+                          <CardContent>
+                            <Typography variant="overline" sx={{ opacity: 0.8 }}>
+                              Available Pets
+                            </Typography>
+                            <Typography variant="h3">{availablePets}</Typography>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                      <motion.div animate={{ y: [0, 10, 0] }} transition={{ duration: 5.8, repeat: Infinity, ease: "easeInOut" }}>
+                        <Card sx={{ bgcolor: "rgba(255,255,255,0.14)", color: "#000000", backdropFilter: "blur(10px)", border: "1px solid rgba(255,255,255,0.18)" }}>
+                          <CardContent>
+                            <Typography variant="overline" sx={{ opacity: 0.8 }}>
+                              Adopted Through Platform
+                            </Typography>
+                            <Typography variant="h3">{adoptedPets}</Typography>
+                          </CardContent>
+                        </Card>
+                      </motion.div>
                     </Stack>
                   </Grid>
                 </Grid>
@@ -170,7 +241,14 @@ const Home = () => {
             <Grid container spacing={3}>
               {spotlightPets.map((pet, index) => (
                 <Grid size={{ xs: 12, md: 4 }} key={pet._id}>
-                  <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: index * 0.08 }} viewport={{ once: true }}>
+                  <motion.div
+                    initial={{ opacity: 0, y: 16 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    whileHover={{ y: -8, rotateX: 3, rotateY: index % 2 === 0 ? -3 : 3 }}
+                    transition={{ duration: 0.35, delay: index * 0.08 }}
+                    viewport={{ once: true }}
+                    style={{ transformStyle: "preserve-3d" }}
+                  >
                     <Card sx={{ overflow: "hidden" }}>
                       <CardMedia component="img" height="220" image={pet.photos[0]?.url || "https://via.placeholder.com/400x300"} alt={pet.name} />
                       <CardContent>
@@ -201,8 +279,10 @@ const Home = () => {
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
+                whileHover={{ y: -10, rotateX: 2, rotateY: index % 2 === 0 ? -2 : 2 }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
                 viewport={{ once: true }}
+                style={{ transformStyle: "preserve-3d" }}
               >
                 <Card sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
                   <CardMedia

@@ -9,7 +9,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "seed:users": "node -r ts-node/register src/scripts/seedUsers.ts",
-    "seed:pets": "node -r ts-node/register src/scripts/seedPets.ts"
+    "seed:pets": "node -r ts-node/register src/scripts/seedPets.ts",
+    "seed:stories": "node -r ts-node/register src/scripts/seedStories.ts"
   },
   "keywords": [],
   "author": "",

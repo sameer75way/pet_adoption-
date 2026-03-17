@@ -32,9 +32,8 @@ const PetsList = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { pets, totalPages, currentPage } = useSelector((state: RootState) => state.pets);
   const { user } = useSelector((state: RootState) => state.auth);
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [searchTerm, setSearchTerm] = useState("");
-  const [speciesFilter, setSpeciesFilter] = useState(searchParams.get("species") || "");
   const [breedFilter, setBreedFilter] = useState("");
   const [sizeFilter, setSizeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -46,6 +45,7 @@ const PetsList = () => {
   const [sortBy, setSortBy] = useState("newest");
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [page, setPage] = useState(1);
+  const speciesFilter = searchParams.get("species") || "";
 
   useEffect(() => {
     dispatch(
@@ -67,7 +67,23 @@ const PetsList = () => {
   }, [dispatch, page, speciesFilter, breedFilter, sizeFilter, statusFilter, searchTerm, ageMin, ageMax, lat, lng, radius]);
 
   const handleSpeciesChange = (event: SelectChangeEvent) => {
-    setSpeciesFilter(event.target.value);
+    const value = event.target.value;
+    setPage(1);
+
+    if (value) {
+      setSearchParams((currentParams) => {
+        const nextParams = new URLSearchParams(currentParams);
+        nextParams.set("species", value);
+        return nextParams;
+      });
+      return;
+    }
+
+    setSearchParams((currentParams) => {
+      const nextParams = new URLSearchParams(currentParams);
+      nextParams.delete("species");
+      return nextParams;
+    });
   };
 
   const filteredPets = pets.filter((pet) => {
@@ -101,7 +117,6 @@ const PetsList = () => {
 
   const resetFilters = () => {
     setSearchTerm("");
-    setSpeciesFilter("");
     setBreedFilter("");
     setSizeFilter("");
     setStatusFilter("");
@@ -111,6 +126,11 @@ const PetsList = () => {
     setLng("");
     setRadius("");
     setPage(1);
+    setSearchParams((currentParams) => {
+      const nextParams = new URLSearchParams(currentParams);
+      nextParams.delete("species");
+      return nextParams;
+    });
   };
 
   return (

@@ -17,6 +17,7 @@ import {
   ArrowForward,
   Healing,
   VolunteerActivism,
+  AutoStories,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -36,6 +37,7 @@ const StaffDashboard = () => {
     { title: "Review Applications", icon: <Assignment />, link: "/staff/applications", color: "secondary" },
     { title: "Approve Fosters", icon: <VolunteerActivism />, link: "/staff/fosters", color: "warning" },
     { title: "Medical Records", icon: <Healing />, link: "/staff/medical", color: "info" },
+    { title: "Add Story", icon: <AutoStories />, link: "/staff/stories", color: "primary" },
   ];
 
   return (

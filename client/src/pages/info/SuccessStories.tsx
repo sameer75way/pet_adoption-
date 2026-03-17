@@ -1,25 +1,28 @@
-import { Card, CardContent, CardMedia, Container, Grid, Typography } from "@mui/material";
+import { useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  Alert,
+  Card,
+  CardContent,
+  CardMedia,
+  CircularProgress,
+  Container,
+  Grid,
+  Stack,
+  Typography,
+} from "@mui/material";
 import { motion } from "framer-motion";
-
-const stories = [
-  {
-    title: "Luna Found a Hiking Buddy",
-    image: "https://images.unsplash.com/photo-1517849845537-4d257902454a?w=1200",
-    summary: "After a careful match review, Luna joined an active family and now spends weekends on trail walks.",
-  },
-  {
-    title: "Milo Finally Has a Quiet Window Seat",
-    image: "https://images.unsplash.com/photo-1519052537078-e6302a4968d4?w=1200",
-    summary: "Milo was paired with a calm adopter who wanted a conversational companion and a relaxed home routine.",
-  },
-  {
-    title: "Charlie Graduated From Foster to Forever",
-    image: "https://images.unsplash.com/photo-1507146426996-ef05306b995a?w=1200",
-    summary: "A foster placement turned into a permanent home once Charlie settled in and showed off his affectionate side.",
-  },
-];
+import { type AppDispatch, type RootState } from "../../app/store";
+import { fetchStories } from "../../features/stories/storySlice";
 
 const SuccessStoriesPage = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { stories, loading, error } = useSelector((state: RootState) => state.stories);
+
+  useEffect(() => {
+    dispatch(fetchStories(false));
+  }, [dispatch]);
+
   return (
     <Container maxWidth="lg" sx={{ py: 6 }}>
       <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
@@ -30,9 +33,16 @@ const SuccessStoriesPage = () => {
           A few of the happy endings made possible by thoughtful screening and patient care.
         </Typography>
 
+        {loading && (
+          <Stack alignItems="center" sx={{ py: 6 }}>
+            <CircularProgress />
+          </Stack>
+        )}
+        {error && <Alert severity="error" sx={{ mb: 3 }}>{error}</Alert>}
+
         <Grid container spacing={3}>
           {stories.map((story, index) => (
-            <Grid size={{ xs: 12, md: 4 }} key={story.title}>
+            <Grid size={{ xs: 12, md: 4 }} key={story._id}>
               <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: index * 0.08 }}>
                 <Card sx={{ height: "100%" }}>
                   <CardMedia component="img" height="220" image={story.image} alt={story.title} />
@@ -43,12 +53,28 @@ const SuccessStoriesPage = () => {
                     <Typography variant="body2" color="text.secondary">
                       {story.summary}
                     </Typography>
+                    <Typography variant="body2" sx={{ mt: 2 }}>
+                      {story.content}
+                    </Typography>
                   </CardContent>
                 </Card>
               </motion.div>
             </Grid>
           ))}
         </Grid>
+
+        {!loading && !error && stories.length === 0 && (
+          <Card sx={{ mt: 4, borderStyle: "dashed" }}>
+            <CardContent sx={{ py: 5, textAlign: "center" }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>
+                No stories published yet
+              </Typography>
+              <Typography color="text.secondary">
+                Shelter staff can add success stories from the dashboard once new adoptions are completed.
+              </Typography>
+            </CardContent>
+          </Card>
+        )}
       </motion.div>
     </Container>
   );

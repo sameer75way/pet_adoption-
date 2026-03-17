@@ -27,6 +27,7 @@ import AboutPage from "../pages/info/About";
 import ContactPage from "../pages/info/Contact";
 import FAQPage from "../pages/info/FAQ";
 import SuccessStoriesPage from "../pages/info/SuccessStories";
+import ManageStoriesPage from "../pages/stories/ManageStories";
 import NotFound from "../pages/NotFound";
 
 const AppRoutes = () => {
@@ -72,6 +73,7 @@ const AppRoutes = () => {
           <Route path="admin/applications" element={<Applications />} />
           <Route path="admin/fosters" element={<FosterApprovalsPage />} />
           <Route path="admin/users" element={<AdminUsers />} />
+          <Route path="admin/stories" element={<ManageStoriesPage />} />
           <Route path="admin/settings" element={<AdminSettings />} />
         </Route>
         
@@ -83,6 +85,7 @@ const AppRoutes = () => {
           <Route path="staff/applications" element={<Applications />} />
           <Route path="staff/fosters" element={<FosterApprovalsPage />} />
           <Route path="staff/medical" element={<StaffMedical />} />
+          <Route path="staff/stories" element={<ManageStoriesPage />} />
         </Route>
         
         <Route element={<ProtectedRoute allowedRoles={["Adopter"]} />}>
