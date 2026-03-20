@@ -3,12 +3,12 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { Provider } from "react-redux";
 import { SnackbarProvider } from "notistack";
 import { BrowserRouter } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { store } from "./app/store";
 import { theme } from "./theme";
 import AppRoutes from "./routes";
-import { fetchCurrentUser } from "./features/auth/authSlice";
+import { fetchCurrentUser, refreshToken } from "./features/auth/authSlice";
 import SplashLoader from "./components/ui/SplashLoader";
 import type { RootState } from "./app/store";
 import { connectSocket, disconnectSocket } from "./services/socket";
@@ -39,10 +39,19 @@ function App() {
   const [showSplash, setShowSplash] = useState(true);
   const [isSplashExiting, setIsSplashExiting] = useState(false);
   const [isAppReady, setIsAppReady] = useState(false);
+  const hasBootstrappedAuth = useRef(false);
 
   useEffect(() => {
-    if (localStorage.getItem("accessToken")) {
-      store.dispatch(fetchCurrentUser());
+    if (!hasBootstrappedAuth.current) {
+      hasBootstrappedAuth.current = true;
+
+      if (localStorage.getItem("accessToken")) {
+        void store
+          .dispatch(refreshToken())
+          .unwrap()
+          .then(() => store.dispatch(fetchCurrentUser()).unwrap())
+          .catch(() => undefined);
+      }
     }
 
     const exitTimer = window.setTimeout(() => {

@@ -57,7 +57,6 @@ export const getPetByIdController = async (
       success: true,
       data: pet
     });
-    emitPetsUpdated({ type: "updated", pet });
   } catch (error) {
     next(error);
   }
@@ -81,7 +80,7 @@ export const updatePetController = async (
       success: true,
       data: pet
     });
-    emitPetsUpdated({ type: "deleted", petId: req.params.id as string });
+    emitPetsUpdated({ type: "updated", pet });
   } catch (error) {
     next(error);
   }
@@ -102,7 +101,7 @@ export const deletePetController = async (
       success: true,
       data: pet
     });
-    emitPetsUpdated({ type: "status", pet });
+    emitPetsUpdated({ type: "deleted", petId: req.params.id as string });
   } catch (error) {
     next(error);
   }
@@ -207,6 +206,7 @@ export const setPrimaryPhotoController = async (
       success: true,
       data: pet
     });
+    emitPetsUpdated({ type: "updated", pet });
   } catch (error) {
     next(error);
   }

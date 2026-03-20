@@ -102,8 +102,11 @@ exports.getPets = getPets;
  * Get Pet By ID
  */
 const getPetById = async (id) => {
-    const pet = await pet_model_1.Pet.findById(id);
-    if (!pet || pet.deletedAt) {
+    const pet = await pet_model_1.Pet.findOne({
+        _id: id,
+        deletedAt: null
+    });
+    if (!pet) {
         throw new Error("Pet not found");
     }
     return pet;
@@ -113,7 +116,10 @@ exports.getPetById = getPetById;
  * Update Pet
  */
 const updatePet = async (id, data) => {
-    const pet = await pet_model_1.Pet.findById(id);
+    const pet = await pet_model_1.Pet.findOne({
+        _id: id,
+        deletedAt: null
+    });
     if (!pet)
         throw new Error("Pet not found");
     Object.assign(pet, data);
@@ -125,7 +131,10 @@ exports.updatePet = updatePet;
  * Soft Delete Pet
  */
 const deletePet = async (id) => {
-    const pet = await pet_model_1.Pet.findById(id);
+    const pet = await pet_model_1.Pet.findOne({
+        _id: id,
+        deletedAt: null
+    });
     if (!pet)
         throw new Error("Pet not found");
     pet.deletedAt = new Date();
@@ -148,7 +157,10 @@ const allowedTransitions = {
  * Update Pet Status (STRICT FLOW)
  */
 const updatePetStatus = async (id, newStatus) => {
-    const pet = await pet_model_1.Pet.findById(id);
+    const pet = await pet_model_1.Pet.findOne({
+        _id: id,
+        deletedAt: null
+    });
     if (!pet)
         throw new Error("Pet not found");
     const currentStatus = pet.status;
@@ -168,7 +180,10 @@ exports.updatePetStatus = updatePetStatus;
  * Add Photo
  */
 const addPetPhoto = async (petId, file) => {
-    const pet = await pet_model_1.Pet.findById(petId);
+    const pet = await pet_model_1.Pet.findOne({
+        _id: petId,
+        deletedAt: null
+    });
     if (!pet)
         throw new Error("Pet not found");
     pet.photos.push({
@@ -184,11 +199,21 @@ exports.addPetPhoto = addPetPhoto;
  * Delete Photo
  */
 const deletePetPhoto = async (petId, publicId) => {
-    const pet = await pet_model_1.Pet.findById(petId);
+    const pet = await pet_model_1.Pet.findOne({
+        _id: petId,
+        deletedAt: null
+    });
     if (!pet)
         throw new Error("Pet not found");
+    const photoToDelete = pet.photos.find((photo) => photo.publicId === publicId);
+    if (!photoToDelete) {
+        throw new Error("Photo not found");
+    }
     await cloudinary_config_1.default.uploader.destroy(publicId);
     pet.photos = pet.photos.filter((p) => p.publicId !== publicId);
+    if (photoToDelete.isPrimary && pet.photos.length > 0) {
+        pet.photos[0].isPrimary = true;
+    }
     await pet.save();
     return pet;
 };
@@ -197,7 +222,10 @@ exports.deletePetPhoto = deletePetPhoto;
  * Set Primary Photo
  */
 const setPrimaryPhoto = async (petId, photoId) => {
-    const pet = await pet_model_1.Pet.findById(petId);
+    const pet = await pet_model_1.Pet.findOne({
+        _id: petId,
+        deletedAt: null
+    });
     if (!pet)
         throw new Error("Pet not found");
     // Remove primary from all photos

@@ -2,32 +2,56 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import {
-  Box,
-  Container,
-  Typography,
-  Grid,
-  Card,
-  CardContent,
-  Chip,
-  Button,
   Alert,
+  Box,
+  Button,
+  Card,
+  CardActionArea,
+  CardContent,
+  CardMedia,
+  Chip,
   CircularProgress,
+  Container,
+  Divider,
+  Grid,
+  Stack,
   Tooltip,
+  Typography,
 } from "@mui/material";
 import {
-  Favorite,
-  Share,
   CalendarToday,
-  Pets,
-  Scale,
   ColorLens,
   Edit,
+  Favorite,
+  LocationOn,
+  Pets,
+  Scale,
+  Share,
 } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import type { AppDispatch, RootState } from "../../app/store";
 import { clearCurrentPet, fetchPetById } from "../../features/pets/petSlice";
+import type { Pet } from "../../features/pets/petSlice";
 import api from "../../services/api";
 import { getSocket } from "../../services/socket";
+
+type MedicalSummary = {
+  vaccinated?: boolean;
+};
+
+const statusColorMap: Record<
+  Pet["status"],
+  "default" | "primary" | "success" | "warning" | "info"
+> = {
+  intake: "default",
+  medical_hold: "warning",
+  available: "success",
+  adoption_pending: "info",
+  adopted: "primary",
+  foster_placed: "info",
+};
+
+const formatStatus = (status: Pet["status"]) => status.replace(/_/g, " ");
 
 const PetDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -35,43 +59,141 @@ const PetDetail = () => {
   const navigate = useNavigate();
   const { isAuthenticated, user } = useSelector((state: RootState) => state.auth);
   const { currentPet, loading, error } = useSelector((state: RootState) => state.pets);
-  const [medicalSummary, setMedicalSummary] = useState<{ vaccinated: boolean } | null>(null);
-  const [actionMessage, setActionMessage] = useState<{ type: "success" | "error" | "info"; text: string } | null>(null);
+  const [medicalSummary, setMedicalSummary] = useState<MedicalSummary | null>(null);
+  const [actionMessage, setActionMessage] = useState<
+    { type: "success" | "error" | "info"; text: string } | null
+  >(null);
   const [isFavorited, setIsFavorited] = useState(false);
+  const [relatedPets, setRelatedPets] = useState<Pet[]>([]);
+  const [extrasLoading, setExtrasLoading] = useState(false);
+  const [selectedPhoto, setSelectedPhoto] = useState(0);
   const pet = currentPet;
 
   useEffect(() => {
-    if (id) {
-      dispatch(fetchPetById(id));
-      api.get(`/medical/${id}/summary`).then((response) => {
-        setMedicalSummary(response.data.data);
-      }).catch(() => {
-        setMedicalSummary(null);
+    if (!id) {
+      return;
+    }
+
+    let active = true;
+    setActionMessage(null);
+    dispatch(fetchPetById(id));
+    setExtrasLoading(true);
+
+    const medicalRequest = api
+      .get(`/medical/${id}/summary`)
+      .then((response) => {
+        if (active) {
+          setMedicalSummary(response.data.data ?? null);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setMedicalSummary(null);
+        }
       });
 
-      if (isAuthenticated) {
-        api.get("/favorites").then((response) => {
-          const favorites = response.data.data as Array<{ pet: { _id: string } }>;
-          setIsFavorited(favorites.some((favorite) => favorite.pet?._id === id));
-        }).catch(() => {
-          setIsFavorited(false);
+    const favoritesRequest = isAuthenticated
+      ? api
+          .get("/favorites")
+          .then((response) => {
+            if (!active) {
+              return;
+            }
+
+            const favorites = response.data.data as Array<{ pet: { _id: string } | null }>;
+            setIsFavorited(favorites.some((favorite) => favorite.pet?._id === id));
+          })
+          .catch(() => {
+            if (active) {
+              setIsFavorited(false);
+            }
+          })
+      : Promise.resolve().then(() => {
+          if (active) {
+            setIsFavorited(false);
+          }
         });
+
+    void Promise.allSettled([medicalRequest, favoritesRequest]).finally(() => {
+      if (active) {
+        setExtrasLoading(false);
       }
-    }
+    });
+
     return () => {
+      active = false;
       dispatch(clearCurrentPet());
     };
   }, [dispatch, id, isAuthenticated]);
 
   useEffect(() => {
-    const socket = getSocket();
-    if (!socket || !id) return;
+    setSelectedPhoto(0);
+  }, [pet?._id]);
 
-    const handlePetUpdated = (payload: { pet?: { _id?: string }; petId?: string }) => {
+  useEffect(() => {
+    if (!pet?._id) {
+      setRelatedPets([]);
+      return;
+    }
+
+    let active = true;
+
+    api
+      .get("/pets", {
+        params: {
+          species: pet.species,
+          status: "available",
+          limit: 4,
+        },
+      })
+      .then((response) => {
+        if (!active) {
+          return;
+        }
+
+        const candidates = (response.data.data as Pet[]).filter(
+          (candidate) => candidate._id !== pet._id
+        );
+        setRelatedPets(candidates.slice(0, 3));
+      })
+      .catch(() => {
+        if (active) {
+          setRelatedPets([]);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [pet?._id, pet?.species]);
+
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket || !id) {
+      return;
+    }
+
+    const handlePetUpdated = (payload: {
+      type?: string;
+      pet?: { _id?: string; status?: Pet["status"] };
+      petId?: string;
+    }) => {
       const updatedPetId = payload.pet?._id || payload.petId;
-      if (updatedPetId === id) {
-        dispatch(fetchPetById(id));
+
+      if (updatedPetId !== id) {
+        return;
       }
+
+      if (payload.type === "deleted") {
+        setActionMessage({
+          type: "info",
+          text: "This pet profile was removed while you were viewing it.",
+        });
+        navigate("/pets", { replace: true });
+        return;
+      }
+
+      dispatch(fetchPetById(id));
     };
 
     const handleFavoriteUpdated = (payload: { petId: string; favorited: boolean }) => {
@@ -87,7 +209,40 @@ const PetDetail = () => {
       socket.off("pet:updated", handlePetUpdated);
       socket.off("favorite:updated", handleFavoriteUpdated);
     };
-  }, [dispatch, id]);
+  }, [dispatch, id, navigate]);
+
+  const galleryPhotos = (() => {
+    if (!pet?.photos?.length) {
+      return [];
+    }
+
+    const primaryIndex = pet.photos.findIndex((photo) => photo.isPrimary);
+
+    if (primaryIndex <= 0) {
+      return pet.photos;
+    }
+
+    return [pet.photos[primaryIndex], ...pet.photos.filter((_, index) => index !== primaryIndex)];
+  })();
+
+  const selectedPhotoUrl = galleryPhotos[selectedPhoto]?.url || "https://via.placeholder.com/800x600";
+  const temperament = pet?.temperament?.filter(Boolean) ?? [];
+  const canApply = pet?.status === "available";
+
+  const petDetails = pet
+    ? [
+        { label: "Breed", value: pet.breed, icon: <Pets /> },
+        {
+          label: "Age",
+          value: `${pet.age.years} years ${pet.age.months} months`,
+          icon: <CalendarToday />,
+        },
+        { label: "Size", value: pet.size.replace("_", " "), icon: <Scale /> },
+        { label: "Color", value: pet.color || "Unknown", icon: <ColorLens /> },
+        { label: "Gender", value: pet.gender, icon: <Pets /> },
+        { label: "Weight", value: pet.weight ? `${pet.weight} kg` : "Unknown", icon: <Scale /> },
+      ]
+    : [];
 
   if (!pet && loading) {
     return (
@@ -105,15 +260,6 @@ const PetDetail = () => {
     );
   }
 
-  const petDetails = [
-    { label: "Breed", value: pet.breed, icon: <Pets /> },
-    { label: "Age", value: `${pet.age.years} years ${pet.age.months} months`, icon: <CalendarToday /> },
-    { label: "Size", value: pet.size, icon: <Scale /> },
-    { label: "Color", value: pet.color || "Unknown", icon: <ColorLens /> },
-    { label: "Gender", value: pet.gender, icon: <Pets /> },
-    { label: "Weight", value: pet.weight ? `${pet.weight} kg` : "Unknown", icon: <Scale /> },
-  ];
-
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
       <motion.div
@@ -121,39 +267,81 @@ const PetDetail = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        {loading && pet && (
+        {(loading || extrasLoading) && (
           <Box sx={{ display: "grid", placeItems: "center", mb: 3 }}>
             <CircularProgress />
           </Box>
         )}
-        {actionMessage && <Alert severity={actionMessage.type} sx={{ mb: 3 }}>{actionMessage.text}</Alert>}
+        {actionMessage && (
+          <Alert severity={actionMessage.type} sx={{ mb: 3 }}>
+            {actionMessage.text}
+          </Alert>
+        )}
+
         <Grid container spacing={4}>
           <Grid size={{ xs: 12, md: 6 }}>
             <Box
               component="img"
-              src={pet.photos[0]?.url || "https://via.placeholder.com/600x500"}
+              src={selectedPhotoUrl}
               alt={pet.name}
               sx={{
                 width: "100%",
-                height: 400,
+                height: { xs: 280, md: 420 },
                 objectFit: "cover",
                 borderRadius: 4,
                 boxShadow: "0 20px 50px rgba(0,0,0,0.1)",
               }}
             />
+            {galleryPhotos.length > 1 && (
+              <Stack direction="row" spacing={1.25} sx={{ mt: 2, overflowX: "auto", pb: 1 }}>
+                {galleryPhotos.map((photo, index) => (
+                  <Box
+                    key={photo.publicId}
+                    component="button"
+                    type="button"
+                    onClick={() => setSelectedPhoto(index)}
+                    sx={{
+                      p: 0,
+                      border: "none",
+                      background: "transparent",
+                      cursor: "pointer",
+                      borderRadius: 2,
+                      overflow: "hidden",
+                      boxShadow:
+                        index === selectedPhoto
+                          ? "0 0 0 3px rgba(25, 118, 210, 0.35)"
+                          : "0 6px 18px rgba(0,0,0,0.08)",
+                    }}
+                  >
+                    <Box
+                      component="img"
+                      src={photo.url}
+                      alt={`${pet.name} ${index + 1}`}
+                      sx={{
+                        width: 88,
+                        height: 88,
+                        objectFit: "cover",
+                        display: "block",
+                      }}
+                    />
+                  </Box>
+                ))}
+              </Stack>
+            )}
           </Grid>
+
           <Grid size={{ xs: 12, md: 6 }}>
             <Box sx={{ mb: 3 }}>
-              <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+              <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mb: 1 }}>
                 <Typography variant="h3" sx={{ fontWeight: 700 }}>
                   {pet.name}
                 </Typography>
                 <Chip
-                  label={pet.status.replace("_", " ")}
-                  color="success"
+                  label={formatStatus(pet.status)}
+                  color={statusColorMap[pet.status]}
                   sx={{ textTransform: "capitalize" }}
                 />
-              </Box>
+              </Stack>
               <Typography variant="h6" color="text.secondary">
                 {pet.species} • {pet.breed}
               </Typography>
@@ -177,7 +365,10 @@ const PetDetail = () => {
                           <Typography variant="caption" color="text.secondary">
                             {detail.label}
                           </Typography>
-                          <Typography variant="body2" sx={{ fontWeight: 600, textTransform: "capitalize" }}>
+                          <Typography
+                            variant="body2"
+                            sx={{ fontWeight: 600, textTransform: "capitalize" }}
+                          >
                             {detail.value}
                           </Typography>
                         </Box>
@@ -187,7 +378,11 @@ const PetDetail = () => {
                 </Grid>
                 {medicalSummary && (
                   <Chip
-                    label={medicalSummary.vaccinated ? "Vaccinations on file" : "Vaccination records pending"}
+                    label={
+                      medicalSummary.vaccinated
+                        ? "Vaccinations on file"
+                        : "Vaccination records pending"
+                    }
                     color={medicalSummary.vaccinated ? "success" : "warning"}
                     sx={{ mt: 2 }}
                   />
@@ -198,25 +393,60 @@ const PetDetail = () => {
             <Card sx={{ mb: 3 }}>
               <CardContent>
                 <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
-                  Temperament
+                  Shelter Info
                 </Typography>
-                <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
-                  {pet.temperament.map((trait) => (
-                    <Chip key={trait} label={trait} color="primary" variant="outlined" />
-                  ))}
-                </Box>
+                <Stack spacing={1}>
+                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
+                    {pet.shelter.name}
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 1, alignItems: "flex-start" }}>
+                    <LocationOn color="action" />
+                    <Typography variant="body2" color="text.secondary">
+                      {pet.shelter.address}
+                    </Typography>
+                  </Box>
+                  <Divider sx={{ my: 1 }} />
+                  <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+                    <Chip label={pet.isNeutered ? "Neutered" : "Not neutered"} variant="outlined" />
+                    <Chip
+                      label={pet.isMicrochipped ? "Microchipped" : "Microchip pending"}
+                      variant="outlined"
+                    />
+                    <Chip label={`Intake: ${pet.intakeType}`} variant="outlined" sx={{ textTransform: "capitalize" }} />
+                  </Stack>
+                </Stack>
               </CardContent>
             </Card>
 
-            <Box sx={{ display: "flex", gap: 2 }}>
+            <Card sx={{ mb: 3 }}>
+              <CardContent>
+                <Typography variant="h6" sx={{ fontWeight: 600, mb: 2 }}>
+                  Temperament
+                </Typography>
+                {temperament.length > 0 ? (
+                  <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                    {temperament.map((trait) => (
+                      <Chip key={trait} label={trait} color="primary" variant="outlined" />
+                    ))}
+                  </Box>
+                ) : (
+                  <Typography variant="body2" color="text.secondary">
+                    Staff has not added temperament notes for {pet.name} yet.
+                  </Typography>
+                )}
+              </CardContent>
+            </Card>
+
+            <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
               <Button
                 component={Link}
                 to={isAuthenticated && user?.role === "Adopter" ? `/pets/${pet._id}/apply` : "/login"}
                 variant="contained"
                 size="large"
                 fullWidth
+                disabled={isAuthenticated && user?.role === "Adopter" && !canApply}
               >
-                Adopt {pet.name}
+                {canApply ? `Adopt ${pet.name}` : `${pet.name} is not accepting applications`}
               </Button>
               <Tooltip title={isFavorited ? "Remove from favorites" : "Save to favorites"}>
                 <Button
@@ -289,7 +519,14 @@ const PetDetail = () => {
               >
                 <Share />
               </Button>
-            </Box>
+            </Stack>
+
+            {!canApply && (
+              <Alert severity="info" sx={{ mt: 2 }}>
+                Applications are only open while a pet is marked available.
+              </Alert>
+            )}
+
             {(user?.role === "Admin" || user?.role === "Staff") && (
               <Box sx={{ mt: 2 }}>
                 <Button
@@ -304,6 +541,45 @@ const PetDetail = () => {
             )}
           </Grid>
         </Grid>
+
+        {relatedPets.length > 0 && (
+          <Box sx={{ mt: 6 }}>
+            <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
+              More Pets You Might Like
+            </Typography>
+            <Grid container spacing={3}>
+              {relatedPets.map((relatedPet) => (
+                <Grid key={relatedPet._id} size={{ xs: 12, sm: 6, md: 4 }}>
+                  <Card sx={{ height: "100%" }}>
+                    <CardActionArea component={Link} to={`/pets/${relatedPet._id}`}>
+                      <CardMedia
+                        component="img"
+                        height="220"
+                        image={relatedPet.photos?.find((photo) => photo.isPrimary)?.url || relatedPet.photos?.[0]?.url || "https://via.placeholder.com/500x350"}
+                        alt={relatedPet.name}
+                      />
+                      <CardContent>
+                        <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+                          <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                            {relatedPet.name}
+                          </Typography>
+                          <Chip
+                            label={formatStatus(relatedPet.status)}
+                            color={statusColorMap[relatedPet.status]}
+                            size="small"
+                          />
+                        </Stack>
+                        <Typography variant="body2" color="text.secondary">
+                          {relatedPet.breed} • {relatedPet.age.years}y {relatedPet.age.months}m
+                        </Typography>
+                      </CardContent>
+                    </CardActionArea>
+                  </Card>
+                </Grid>
+              ))}
+            </Grid>
+          </Box>
+        )}
       </motion.div>
     </Container>
   );

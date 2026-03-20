@@ -213,6 +213,7 @@ const petSlice = createSlice({
       })
       .addCase(fetchPetById.pending, (state) => {
         state.loading = true;
+        state.error = null;
       })
       .addCase(fetchPetById.fulfilled, (state, action) => {
         state.loading = false;
@@ -220,6 +221,7 @@ const petSlice = createSlice({
       })
       .addCase(fetchPetById.rejected, (state, action) => {
         state.loading = false;
+        state.currentPet = null;
         state.error = action.payload as string;
       })
       .addCase(createPet.fulfilled, (state, action) => {

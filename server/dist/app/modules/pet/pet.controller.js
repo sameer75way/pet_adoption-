@@ -75,7 +75,6 @@ const getPetByIdController = async (req, res, next) => {
             success: true,
             data: pet
         });
-        (0, socket_1.emitPetsUpdated)({ type: "updated", pet });
     }
     catch (error) {
         next(error);
@@ -92,7 +91,7 @@ const updatePetController = async (req, res, next) => {
             success: true,
             data: pet
         });
-        (0, socket_1.emitPetsUpdated)({ type: "deleted", petId: req.params.id });
+        (0, socket_1.emitPetsUpdated)({ type: "updated", pet });
     }
     catch (error) {
         next(error);
@@ -109,7 +108,7 @@ const deletePetController = async (req, res, next) => {
             success: true,
             data: pet
         });
-        (0, socket_1.emitPetsUpdated)({ type: "status", pet });
+        (0, socket_1.emitPetsUpdated)({ type: "deleted", petId: req.params.id });
     }
     catch (error) {
         next(error);
@@ -184,6 +183,7 @@ const setPrimaryPhotoController = async (req, res, next) => {
             success: true,
             data: pet
         });
+        (0, socket_1.emitPetsUpdated)({ type: "updated", pet });
     }
     catch (error) {
         next(error);

@@ -14,8 +14,8 @@ import {
 } from "@mui/material";
 import { Favorite, ArrowForward, Pets, VolunteerActivism, Home as HomeIcon, Diversity3, HealthAndSafety, CheckCircle } from "@mui/icons-material";
 import { motion, useScroll, useTransform } from "framer-motion";
-import type { AppDispatch, RootState } from "../app/store";
-import { fetchPets } from "../features/pets/petSlice";
+import type { AppDispatch, RootState } from "../../app/store";
+import { fetchPets } from "../../features/pets/petSlice";
 
 import { useEffect, useRef } from "react";
 

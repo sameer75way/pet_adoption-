@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 import type { RootState } from "../app/store";
 import Layout from "../components/layout/Layout";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
-import Home from "../pages/Home";
+import Home from "../pages/stories/Home";
 import Login from "../pages/auth/Login";
 import Register from "../pages/auth/Register";
 import AdminDashboard from "../pages/admin/Dashboard";

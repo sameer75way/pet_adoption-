@@ -17,10 +17,6 @@
 
     "resolveJsonModule": true,
 
-    "moduleResolution": "node",
-
-    "baseUrl": "./src",
-
     "types": ["node"],
 
     "sourceMap": true

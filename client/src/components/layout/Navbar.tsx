@@ -101,6 +101,7 @@ const Navbar = () => {
   const handleLogout = () => {
     void dispatch(logout());
     handleClose();
+    setMobileMenuAnchor(null);
     navigate("/");
   };
 
@@ -204,15 +205,17 @@ const Navbar = () => {
                     sx: { mt: 1.5, minWidth: 200, borderRadius: 2 },
                   }}
                 >
-                  <MenuItem disabled>
-                    <Typography variant="body2" color="text.secondary">
-                      {user?.name} ({user?.role})
-                    </Typography>
-                  </MenuItem>
-                  <MenuItem onClick={handleLogout}>
-                    <Logout sx={{ mr: 1, fontSize: 20 }} />
-                    Logout
-                  </MenuItem>
+                  {[
+                    <MenuItem key="profile-summary" disabled>
+                      <Typography variant="body2" color="text.secondary">
+                        {user?.name} ({user?.role})
+                      </Typography>
+                    </MenuItem>,
+                    <MenuItem key="logout" onClick={handleLogout}>
+                      <Logout sx={{ mr: 1, fontSize: 20 }} />
+                      Logout
+                    </MenuItem>,
+                  ]}
                 </Menu>
               </>
             ) : (
@@ -240,35 +243,52 @@ const Navbar = () => {
             onClose={() => setMobileMenuAnchor(null)}
             PaperProps={{ sx: { mt: 1.5, minWidth: 200 } }}
           >
-            <MenuItem component={Link} to="/" onClick={() => setMobileMenuAnchor(null)}>
-              Home
-            </MenuItem>
-            <MenuItem component={Link} to="/pets" onClick={() => setMobileMenuAnchor(null)}>
-              Browse Pets
-            </MenuItem>
-            <MenuItem component={Link} to="/stories" onClick={() => setMobileMenuAnchor(null)}>
-              Stories
-            </MenuItem>
-            {isAuthenticated ? (
-              <>
-                <MenuItem component={Link} to={getDashboardLink()} onClick={() => setMobileMenuAnchor(null)}>
-                  Dashboard
-                </MenuItem>
-                <MenuItem component={Link} to="/notifications" onClick={() => setMobileMenuAnchor(null)}>
-                  Notifications
-                </MenuItem>
-                <MenuItem onClick={handleLogout}>Logout</MenuItem>
-              </>
-            ) : (
-              <>
-                <MenuItem component={Link} to="/login" onClick={() => setMobileMenuAnchor(null)}>
-                  Login
-                </MenuItem>
-                <MenuItem component={Link} to="/register" onClick={() => setMobileMenuAnchor(null)}>
-                  Register
-                </MenuItem>
-              </>
-            )}
+            {[
+              <MenuItem key="home" component={Link} to="/" onClick={() => setMobileMenuAnchor(null)}>
+                Home
+              </MenuItem>,
+              <MenuItem key="pets" component={Link} to="/pets" onClick={() => setMobileMenuAnchor(null)}>
+                Browse Pets
+              </MenuItem>,
+              <MenuItem key="stories" component={Link} to="/stories" onClick={() => setMobileMenuAnchor(null)}>
+                Stories
+              </MenuItem>,
+              ...(isAuthenticated
+                ? [
+                    <MenuItem
+                      key="dashboard"
+                      component={Link}
+                      to={getDashboardLink()}
+                      onClick={() => setMobileMenuAnchor(null)}
+                    >
+                      Dashboard
+                    </MenuItem>,
+                    <MenuItem
+                      key="notifications"
+                      component={Link}
+                      to="/notifications"
+                      onClick={() => setMobileMenuAnchor(null)}
+                    >
+                      Notifications
+                    </MenuItem>,
+                    <MenuItem key="mobile-logout" onClick={handleLogout}>
+                      Logout
+                    </MenuItem>,
+                  ]
+                : [
+                    <MenuItem key="login" component={Link} to="/login" onClick={() => setMobileMenuAnchor(null)}>
+                      Login
+                    </MenuItem>,
+                    <MenuItem
+                      key="register"
+                      component={Link}
+                      to="/register"
+                      onClick={() => setMobileMenuAnchor(null)}
+                    >
+                      Register
+                    </MenuItem>,
+                  ]),
+            ]}
           </Menu>
         </Toolbar>
       </AppBar>
