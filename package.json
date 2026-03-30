@@ -1,6 +1,10 @@
 {
   "name": "major-project",
   "private": true,
+  "packageManager": "npm@11.9.0",
+  "engines": {
+    "node": "22.x"
+  },
   "workspaces": [
     "client",
     "server"
