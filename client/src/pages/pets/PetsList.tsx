@@ -23,11 +23,12 @@ import {
   InputAdornment,
 } from "@mui/material";
 import type { SelectChangeEvent } from "@mui/material";
-import { Search, FilterList, Edit, Add } from "@mui/icons-material";
+import { Search, FilterList, Add, Pets, Tune, Edit } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import type { AppDispatch, RootState } from "../../app/store";
 import { fetchPets } from "../../features/pets/petSlice";
 import { getSocket } from "../../services/socket";
+import { gradients } from "../../theme";
 
 const PetsList = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -171,40 +172,71 @@ const PetsList = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <Stack direction={{ xs: "column", md: "row" }} justifyContent="space-between" alignItems={{ xs: "flex-start", md: "center" }} sx={{ mb: 4 }}>
-          <Box>
-            <Typography variant="h4" sx={{ fontWeight: 700, mb: 1 }}>
-              Browse Pets
-            </Typography>
-            <Typography variant="body1" color="text.secondary">
-              Find your perfect companion from our available pets
-            </Typography>
-          </Box>
-          {canManagePets && (
-            <Button
-              component={Link}
-              to={user?.role === "Admin" ? "/admin/pets/new" : "/staff/pets/new"}
-              variant="contained"
-              startIcon={<Add />}
+        <Card
+          sx={{
+            mb: 4,
+            p: 0,
+            overflow: "hidden",
+            color: "#fff",
+            background: gradients.hero,
+          }}
+        >
+          <Box sx={{ px: { xs: 2.5, md: 4 }, py: { xs: 3, md: 4 } }}>
+            <Stack
+              direction={{ xs: "column", md: "row" }}
+              justifyContent="space-between"
+              alignItems={{ xs: "flex-start", md: "center" }}
+              spacing={2.5}
             >
-              Add New Pet
-            </Button>
-          )}
-        </Stack>
+              <Box sx={{ maxWidth: 760 }}>
+                <Chip
+                  icon={<Pets />}
+                  label="Curated shelter browser"
+                  sx={{
+                    mb: 2,
+                    bgcolor: "rgba(255,255,255,0.14)",
+                    color: "#fff",
+                    border: "1px solid rgba(255,255,255,0.14)",
+                  }}
+                />
+                <Typography variant="h3" sx={{ fontWeight: 700, mb: 1 }}>
+                  Browse Pets With Better Context
+                </Typography>
+                <Typography variant="body1" sx={{ opacity: 0.88 }}>
+                  Search by species, temperament cues, age, care stage, and location to find a stronger match faster.
+                </Typography>
+              </Box>
+              {canManagePets && (
+                <Button
+                  component={Link}
+                  to={user?.role === "Admin" ? "/admin/pets/new" : "/staff/pets/new"}
+                  variant="contained"
+                  color="secondary"
+                  startIcon={<Add />}
+                >
+                  Add New Pet
+                </Button>
+              )}
+            </Stack>
+          </Box>
+        </Card>
 
         <Card sx={{ mb: 4, p: 0, overflow: "hidden" }}>
           <Box
             sx={{
               px: { xs: 2, md: 3 },
               py: 2.5,
-              background: "linear-gradient(135deg, rgba(31,111,120,0.08) 0%, rgba(217,119,6,0.08) 100%)",
+              background: "linear-gradient(135deg, rgba(23,92,99,0.08) 0%, rgba(201,110,22,0.08) 100%)",
             }}
           >
             <Stack direction={{ xs: "column", md: "row" }} spacing={2} justifyContent="space-between" alignItems={{ xs: "flex-start", md: "center" }}>
               <Box>
-                <Typography variant="h6" sx={{ fontWeight: 700, mb: 0.5 }}>
-                  Search With More Intention
-                </Typography>
+                <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 0.75 }}>
+                  <Tune fontSize="small" color="primary" />
+                  <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                    Search With More Intention
+                  </Typography>
+                </Stack>
                 <Typography variant="body2" color="text.secondary">
                   Filter by species, age, size, status, or shelter location to find a better match faster.
                 </Typography>
@@ -232,6 +264,8 @@ const PetsList = () => {
           </Box>
         </Card>
 
+        <Card sx={{ mb: 4 }}>
+          <CardContent sx={{ p: { xs: 2.5, md: 3 } }}>
         <Box sx={{ display: "flex", gap: 2, mb: 4, flexWrap: "wrap" }}>
           <TextField
             placeholder="Search by name or breed..."
@@ -338,6 +372,8 @@ const PetsList = () => {
             </Button>
           </Box>
         </Collapse>
+          </CardContent>
+        </Card>
 
         <Grid container spacing={3}>
           {sortedPets.map((pet, index) => (

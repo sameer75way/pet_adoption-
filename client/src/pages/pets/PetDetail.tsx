@@ -61,12 +61,12 @@ const PetDetail = () => {
   const { currentPet, loading, error } = useSelector((state: RootState) => state.pets);
   const [medicalSummary, setMedicalSummary] = useState<MedicalSummary | null>(null);
   const [actionMessage, setActionMessage] = useState<
-    { type: "success" | "error" | "info"; text: string } | null
+    { type: "success" | "error" | "info"; text: string; petId: string } | null
   >(null);
   const [isFavorited, setIsFavorited] = useState(false);
   const [relatedPets, setRelatedPets] = useState<Pet[]>([]);
-  const [extrasLoading, setExtrasLoading] = useState(false);
-  const [selectedPhoto, setSelectedPhoto] = useState(0);
+  const [relatedPetsSourceId, setRelatedPetsSourceId] = useState<string | null>(null);
+  const [selectedPhotoId, setSelectedPhotoId] = useState<string | null>(null);
   const pet = currentPet;
 
   useEffect(() => {
@@ -75,9 +75,7 @@ const PetDetail = () => {
     }
 
     let active = true;
-    setActionMessage(null);
     dispatch(fetchPetById(id));
-    setExtrasLoading(true);
 
     const medicalRequest = api
       .get(`/medical/${id}/summary`)
@@ -115,8 +113,8 @@ const PetDetail = () => {
         });
 
     void Promise.allSettled([medicalRequest, favoritesRequest]).finally(() => {
-      if (active) {
-        setExtrasLoading(false);
+      if (!active) {
+        return;
       }
     });
 
@@ -127,16 +125,12 @@ const PetDetail = () => {
   }, [dispatch, id, isAuthenticated]);
 
   useEffect(() => {
-    setSelectedPhoto(0);
-  }, [pet?._id]);
-
-  useEffect(() => {
     if (!pet?._id) {
-      setRelatedPets([]);
       return;
     }
 
     let active = true;
+    const sourcePetId = pet._id;
 
     api
       .get("/pets", {
@@ -154,10 +148,12 @@ const PetDetail = () => {
         const candidates = (response.data.data as Pet[]).filter(
           (candidate) => candidate._id !== pet._id
         );
+        setRelatedPetsSourceId(sourcePetId);
         setRelatedPets(candidates.slice(0, 3));
       })
       .catch(() => {
         if (active) {
+          setRelatedPetsSourceId(sourcePetId);
           setRelatedPets([]);
         }
       });
@@ -188,6 +184,7 @@ const PetDetail = () => {
         setActionMessage({
           type: "info",
           text: "This pet profile was removed while you were viewing it.",
+          petId: id,
         });
         navigate("/pets", { replace: true });
         return;
@@ -225,9 +222,14 @@ const PetDetail = () => {
     return [pet.photos[primaryIndex], ...pet.photos.filter((_, index) => index !== primaryIndex)];
   })();
 
-  const selectedPhotoUrl = galleryPhotos[selectedPhoto]?.url || "https://via.placeholder.com/800x600";
+  const selectedPhoto =
+    galleryPhotos.find((photo) => photo.publicId === selectedPhotoId) || galleryPhotos[0];
+  const selectedPhotoUrl = selectedPhoto?.url || "https://via.placeholder.com/800x600";
   const temperament = pet?.temperament?.filter(Boolean) ?? [];
   const canApply = pet?.status === "available";
+  const visibleActionMessage =
+    actionMessage && actionMessage.petId === id ? actionMessage : null;
+  const visibleRelatedPets = pet?._id && relatedPetsSourceId === pet._id ? relatedPets : [];
 
   const petDetails = pet
     ? [
@@ -267,14 +269,14 @@ const PetDetail = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        {(loading || extrasLoading) && (
+        {loading && (
           <Box sx={{ display: "grid", placeItems: "center", mb: 3 }}>
             <CircularProgress />
           </Box>
         )}
-        {actionMessage && (
-          <Alert severity={actionMessage.type} sx={{ mb: 3 }}>
-            {actionMessage.text}
+        {visibleActionMessage && (
+          <Alert severity={visibleActionMessage.type} sx={{ mb: 3 }}>
+            {visibleActionMessage.text}
           </Alert>
         )}
 
@@ -299,7 +301,7 @@ const PetDetail = () => {
                     key={photo.publicId}
                     component="button"
                     type="button"
-                    onClick={() => setSelectedPhoto(index)}
+                    onClick={() => setSelectedPhotoId(photo.publicId)}
                     sx={{
                       p: 0,
                       border: "none",
@@ -308,7 +310,7 @@ const PetDetail = () => {
                       borderRadius: 2,
                       overflow: "hidden",
                       boxShadow:
-                        index === selectedPhoto
+                        photo.publicId === selectedPhoto?.publicId
                           ? "0 0 0 3px rgba(25, 118, 210, 0.35)"
                           : "0 6px 18px rgba(0,0,0,0.08)",
                     }}
@@ -470,12 +472,14 @@ const PetDetail = () => {
                         text: favorited
                           ? `${pet.name} was added to your favorites.`
                           : `${pet.name} was removed from your favorites.`,
+                        petId: pet._id,
                       });
                     } catch (favoriteError) {
                       const err = favoriteError as { response?: { data?: { message?: string } } };
                       setActionMessage({
                         type: "error",
                         text: err.response?.data?.message || "Unable to update favorites right now.",
+                        petId: pet._id,
                       });
                     }
                   }}
@@ -500,6 +504,7 @@ const PetDetail = () => {
                       setActionMessage({
                         type: "success",
                         text: `Shared ${pet.name}'s profile successfully.`,
+                        petId: pet._id,
                       });
                       return;
                     }
@@ -508,11 +513,13 @@ const PetDetail = () => {
                     setActionMessage({
                       type: "success",
                       text: `${pet.name}'s profile link was copied to your clipboard.`,
+                      petId: pet._id,
                     });
                   } catch {
                     setActionMessage({
                       type: "error",
                       text: "Sharing is not available in this browser right now.",
+                      petId: pet._id,
                     });
                   }
                 }}
@@ -542,13 +549,13 @@ const PetDetail = () => {
           </Grid>
         </Grid>
 
-        {relatedPets.length > 0 && (
+        {visibleRelatedPets.length > 0 && (
           <Box sx={{ mt: 6 }}>
             <Typography variant="h5" sx={{ fontWeight: 700, mb: 2 }}>
               More Pets You Might Like
             </Typography>
             <Grid container spacing={3}>
-              {relatedPets.map((relatedPet) => (
+              {visibleRelatedPets.map((relatedPet) => (
                 <Grid key={relatedPet._id} size={{ xs: 12, sm: 6, md: 4 }}>
                   <Card sx={{ height: "100%" }}>
                     <CardActionArea component={Link} to={`/pets/${relatedPet._id}`}>

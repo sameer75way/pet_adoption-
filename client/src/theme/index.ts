@@ -4,20 +4,20 @@ export const theme = createTheme({
   palette: {
     mode: "light",
     primary: {
-      main: "#1f6f78",
-      light: "#5aa6af",
-      dark: "#124f56",
+      main: "#175c63",
+      light: "#3d8b93",
+      dark: "#103f44",
       contrastText: "#ffffff",
     },
     secondary: {
-      main: "#d97706",
-      light: "#f3a73d",
-      dark: "#a85b00",
+      main: "#c96e16",
+      light: "#e49a4d",
+      dark: "#8f4e0c",
       contrastText: "#ffffff",
     },
     background: {
-      default: "#f4efe7",
-      paper: "#fffdf9",
+      default: "#f2ede4",
+      paper: "#fffaf3",
     },
     error: {
       main: "#ef4444",
@@ -32,55 +32,81 @@ export const theme = createTheme({
       main: "#3b82f6",
     },
     text: {
-      primary: "#1b2b34",
-      secondary: "#5f6c72",
+      primary: "#18262d",
+      secondary: "#5f6a6f",
     },
   },
   typography: {
-    fontFamily: '"Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif',
+    fontFamily: '"Avenir Next", "Trebuchet MS", "Segoe UI", "Helvetica Neue", Arial, sans-serif',
     h1: {
       fontWeight: 700,
-      fontSize: "3rem",
-      letterSpacing: "-0.04em",
+      fontSize: "3.3rem",
+      lineHeight: 1.02,
+      letterSpacing: "-0.05em",
     },
     h2: {
       fontWeight: 700,
-      fontSize: "2.35rem",
-      letterSpacing: "-0.04em",
+      fontSize: "2.6rem",
+      lineHeight: 1.05,
+      letterSpacing: "-0.05em",
     },
     h3: {
-      fontWeight: 600,
-      fontSize: "1.7rem",
+      fontWeight: 700,
+      fontSize: "1.85rem",
+      lineHeight: 1.1,
     },
     h4: {
-      fontWeight: 600,
-      fontSize: "1.35rem",
+      fontWeight: 700,
+      fontSize: "1.45rem",
+      lineHeight: 1.14,
     },
     h5: {
       fontWeight: 600,
-      fontSize: "1.125rem",
+      fontSize: "1.18rem",
     },
     h6: {
       fontWeight: 600,
-      fontSize: "1rem",
+      fontSize: "1.02rem",
+    },
+    body1: {
+      lineHeight: 1.7,
+    },
+    body2: {
+      lineHeight: 1.65,
     },
     button: {
       fontWeight: 600,
       textTransform: "none",
+      letterSpacing: "0.01em",
     },
   },
   shape: {
-    borderRadius: 18,
+    borderRadius: 22,
   },
   components: {
     MuiCssBaseline: {
       styleOverrides: {
+        ":root": {
+          colorScheme: "light",
+        },
         body: {
           background:
-            "radial-gradient(circle at top left, rgba(31,111,120,0.12), transparent 28%), radial-gradient(circle at top right, rgba(217,119,6,0.12), transparent 24%), linear-gradient(180deg, #f8f4ee 0%, #f3ede2 100%)",
+            "radial-gradient(circle at top left, rgba(23,92,99,0.14), transparent 26%), radial-gradient(circle at top right, rgba(201,110,22,0.12), transparent 24%), linear-gradient(180deg, #f7f1e8 0%, #efe6d8 100%)",
+          color: "#18262d",
+        },
+        a: {
+          color: "inherit",
         },
         "::selection": {
-          backgroundColor: "rgba(31,111,120,0.18)",
+          backgroundColor: "rgba(23,92,99,0.18)",
+        },
+      },
+    },
+    MuiAppBar: {
+      styleOverrides: {
+        root: {
+          boxShadow: "none",
+          backgroundImage: "none",
         },
       },
     },
@@ -88,33 +114,42 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 999,
-          padding: "10px 22px",
+          padding: "10px 24px",
           boxShadow: "none",
-          letterSpacing: "0.01em",
+          fontSize: "0.96rem",
           "&:hover": {
-            boxShadow: "0 10px 20px rgba(18, 79, 86, 0.18)",
+            boxShadow: "0 16px 32px rgba(16, 63, 68, 0.16)",
+            transform: "translateY(-1px)",
           },
         },
         containedPrimary: {
-          background: "linear-gradient(135deg, #1f6f78 0%, #165c64 100%)",
+          background: "linear-gradient(135deg, #175c63 0%, #12484d 100%)",
+        },
+        containedSecondary: {
+          background: "linear-gradient(135deg, #c96e16 0%, #aa5a11 100%)",
+        },
+        outlined: {
+          borderWidth: 1.5,
         },
       },
     },
     MuiCard: {
       styleOverrides: {
         root: {
-          borderRadius: 24,
-          boxShadow: "0 18px 45px rgba(45, 57, 61, 0.08)",
-          border: "1px solid rgba(194, 182, 166, 0.35)",
+          borderRadius: 28,
+          boxShadow: "0 22px 54px rgba(41, 50, 53, 0.08)",
+          border: "1px solid rgba(194, 182, 166, 0.32)",
           backgroundImage:
-            "linear-gradient(180deg, rgba(255,255,255,0.92) 0%, rgba(255,251,246,0.98) 100%)",
+            "linear-gradient(180deg, rgba(255,255,255,0.94) 0%, rgba(255,250,243,0.98) 100%)",
         },
       },
     },
     MuiPaper: {
       styleOverrides: {
         root: {
-          borderRadius: 24,
+          borderRadius: 28,
+          backgroundImage:
+            "linear-gradient(180deg, rgba(255,255,255,0.94) 0%, rgba(255,250,243,0.98) 100%)",
         },
       },
     },
@@ -122,7 +157,28 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           borderRadius: 999,
-          fontWeight: 500,
+          fontWeight: 600,
+          letterSpacing: "0.01em",
+        },
+      },
+    },
+    MuiDialog: {
+      styleOverrides: {
+        paper: {
+          borderRadius: 30,
+          boxShadow: "0 30px 80px rgba(28, 35, 38, 0.18)",
+        },
+      },
+    },
+    MuiTableCell: {
+      styleOverrides: {
+        head: {
+          fontWeight: 700,
+          color: "#415056",
+          borderBottom: "1px solid rgba(188, 175, 156, 0.45)",
+        },
+        root: {
+          borderBottom: "1px solid rgba(188, 175, 156, 0.24)",
         },
       },
     },
@@ -130,8 +186,15 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           "& .MuiOutlinedInput-root": {
-            borderRadius: 16,
-            backgroundColor: "rgba(255,255,255,0.72)",
+            borderRadius: 18,
+            backgroundColor: "rgba(255,255,255,0.78)",
+            transition: "transform 0.2s ease, box-shadow 0.2s ease",
+            "&:hover": {
+              boxShadow: "0 10px 24px rgba(24, 38, 45, 0.06)",
+            },
+          },
+          "& .MuiInputLabel-root": {
+            fontWeight: 500,
           },
         },
       },
@@ -140,10 +203,11 @@ export const theme = createTheme({
 });
 
 export const gradients = {
-  primary: "linear-gradient(135deg, #1f6f78 0%, #2f8c95 100%)",
-  secondary: "linear-gradient(135deg, #d97706 0%, #f0a43a 100%)",
+  primary: "linear-gradient(135deg, #175c63 0%, #2e858d 100%)",
+  secondary: "linear-gradient(135deg, #c96e16 0%, #e29a4f 100%)",
   success: "linear-gradient(135deg, #22c55e 0%, #16a34a 100%)",
   info: "linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)",
   warning: "linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)",
-  hero: "linear-gradient(135deg, #19474f 0%, #1f6f78 45%, #d97706 100%)",
+  hero: "linear-gradient(135deg, #123d43 0%, #175c63 40%, #c96e16 100%)",
+  shell: "linear-gradient(180deg, rgba(255,252,247,0.98) 0%, rgba(244,236,223,0.94) 100%)",
 };
