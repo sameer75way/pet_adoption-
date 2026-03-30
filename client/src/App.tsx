@@ -27,7 +27,7 @@ const RealtimeBridge = () => {
     const socket = connectSocket(accessToken);
 
     return () => {
-      socket.disconnect();
+      socket?.disconnect();
       disconnectSocket();
     };
   }, [accessToken, isAuthenticated]);

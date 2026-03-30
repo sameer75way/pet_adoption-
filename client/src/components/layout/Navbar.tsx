@@ -29,7 +29,12 @@ import type { RootState } from "../../app/store";
 import type { AppDispatch } from "../../app/store";
 import { logout } from "../../features/auth/authSlice";
 import api from "../../services/api";
-import { getSocket } from "../../services/socket";
+import {
+  getRealtimePollMs,
+  getSocket,
+  isRealtimeEnabled,
+} from "../../services/socket";
+import { usePollingEffect } from "../../hooks/usePollingEffect";
 
 const HideOnScroll = ({ children }: { children: React.ReactElement }) => {
   const trigger = useScrollTrigger();
@@ -48,24 +53,30 @@ const Navbar = () => {
   const [mobileMenuAnchor, setMobileMenuAnchor] = useState<null | HTMLElement>(null);
   const [notificationCount, setNotificationCount] = useState(0);
 
+  const loadNotifications = async () => {
+    if (!isAuthenticated) {
+      setNotificationCount(0);
+      return;
+    }
+
+    try {
+      const response = await api.get("/notifications");
+      const notifications = response.data.data as Array<{ isRead: boolean }>;
+      setNotificationCount(notifications.filter((notification) => !notification.isRead).length);
+    } catch {
+      setNotificationCount(0);
+    }
+  };
+
   useEffect(() => {
-    const loadNotifications = async () => {
-      if (!isAuthenticated) {
-        setNotificationCount(0);
-        return;
-      }
-
-      try {
-        const response = await api.get("/notifications");
-        const notifications = response.data.data as Array<{ isRead: boolean }>;
-        setNotificationCount(notifications.filter((notification) => !notification.isRead).length);
-      } catch {
-        setNotificationCount(0);
-      }
-    };
-
     void loadNotifications();
   }, [isAuthenticated]);
+
+  usePollingEffect(
+    !isRealtimeEnabled() && isAuthenticated,
+    loadNotifications,
+    getRealtimePollMs()
+  );
 
   useEffect(() => {
     const socket = getSocket();

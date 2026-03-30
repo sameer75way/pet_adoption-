@@ -7,12 +7,15 @@ exports.connectDB = void 0;
 const mongoose_1 = __importDefault(require("mongoose"));
 const connectDB = async () => {
     try {
+        if (mongoose_1.default.connection.readyState === 1) {
+            return;
+        }
         await mongoose_1.default.connect(process.env.MONGODB_URI);
         console.log("MongoDB Connected");
     }
     catch (error) {
         console.error("MongoDB Error", error);
-        process.exit(1);
+        throw error;
     }
 };
 exports.connectDB = connectDB;

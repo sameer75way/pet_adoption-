@@ -12,7 +12,12 @@ import {
 } from "@mui/material";
 import { motion } from "framer-motion";
 import api from "../../services/api";
-import { getSocket } from "../../services/socket";
+import {
+  getRealtimePollMs,
+  getSocket,
+  isRealtimeEnabled,
+} from "../../services/socket";
+import { usePollingEffect } from "../../hooks/usePollingEffect";
 
 interface FosterApplicant {
   _id: string;
@@ -42,6 +47,8 @@ const FosterApprovalsPage = () => {
       void loadApplicants();
     });
   }, []);
+
+  usePollingEffect(!isRealtimeEnabled(), loadApplicants, getRealtimePollMs());
 
   useEffect(() => {
     const socket = getSocket();

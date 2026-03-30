@@ -33,7 +33,12 @@ import type { AppDispatch, RootState } from "../../app/store";
 import { clearCurrentPet, fetchPetById } from "../../features/pets/petSlice";
 import type { Pet } from "../../features/pets/petSlice";
 import api from "../../services/api";
-import { getSocket } from "../../services/socket";
+import {
+  getRealtimePollMs,
+  getSocket,
+  isRealtimeEnabled,
+} from "../../services/socket";
+import { usePollingEffect } from "../../hooks/usePollingEffect";
 
 type MedicalSummary = {
   vaccinated?: boolean;
@@ -123,6 +128,27 @@ const PetDetail = () => {
       dispatch(clearCurrentPet());
     };
   }, [dispatch, id, isAuthenticated]);
+
+  usePollingEffect(
+    !isRealtimeEnabled() && Boolean(id),
+    async () => {
+      if (!id) {
+        return;
+      }
+
+      await dispatch(fetchPetById(id));
+
+      if (!isAuthenticated) {
+        setIsFavorited(false);
+        return;
+      }
+
+      const response = await api.get("/favorites");
+      const favorites = response.data.data as Array<{ pet: { _id: string } | null }>;
+      setIsFavorited(favorites.some((favorite) => favorite.pet?._id === id));
+    },
+    getRealtimePollMs()
+  );
 
   useEffect(() => {
     if (!pet?._id) {

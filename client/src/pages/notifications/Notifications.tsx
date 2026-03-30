@@ -12,7 +12,12 @@ import {
 } from "@mui/material";
 import { motion } from "framer-motion";
 import api from "../../services/api";
-import { getSocket } from "../../services/socket";
+import {
+  getRealtimePollMs,
+  getSocket,
+  isRealtimeEnabled,
+} from "../../services/socket";
+import { usePollingEffect } from "../../hooks/usePollingEffect";
 
 interface NotificationItem {
   _id: string;
@@ -26,19 +31,21 @@ const NotificationsPage = () => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const loadNotifications = async () => {
-      try {
-        const response = await api.get("/notifications");
-        setNotifications(response.data.data);
-      } catch (loadError) {
-        const err = loadError as { response?: { data?: { message?: string } } };
-        setError(err.response?.data?.message || "Failed to load notifications");
-      }
-    };
+  const loadNotifications = async () => {
+    try {
+      const response = await api.get("/notifications");
+      setNotifications(response.data.data);
+    } catch (loadError) {
+      const err = loadError as { response?: { data?: { message?: string } } };
+      setError(err.response?.data?.message || "Failed to load notifications");
+    }
+  };
 
+  useEffect(() => {
     void loadNotifications();
   }, []);
+
+  usePollingEffect(!isRealtimeEnabled(), loadNotifications, getRealtimePollMs());
 
   useEffect(() => {
     const socket = getSocket();

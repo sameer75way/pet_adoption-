@@ -1,0 +1,13 @@
+{
+  "name": "major-project",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace server && npm run build --workspace client",
+    "build:client": "npm run build --workspace client",
+    "build:server": "npm run build --workspace server"
+  }
+}

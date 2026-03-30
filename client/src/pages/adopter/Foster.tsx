@@ -16,7 +16,12 @@ import { motion } from "framer-motion";
 import api from "../../services/api";
 import type { AppDispatch, RootState } from "../../app/store";
 import { fetchCurrentUser } from "../../features/auth/authSlice";
-import { getSocket } from "../../services/socket";
+import {
+  getRealtimePollMs,
+  getSocket,
+  isRealtimeEnabled,
+} from "../../services/socket";
+import { usePollingEffect } from "../../hooks/usePollingEffect";
 
 interface FosterAssignmentView {
   _id: string;
@@ -53,6 +58,17 @@ const FosterPage = () => {
       void loadAssignments();
     });
   }, []);
+
+  usePollingEffect(
+    !isRealtimeEnabled(),
+    async () => {
+      await loadAssignments();
+      if (user?._id) {
+        await dispatch(fetchCurrentUser()).unwrap();
+      }
+    },
+    getRealtimePollMs()
+  );
 
   useEffect(() => {
     const socket = getSocket();

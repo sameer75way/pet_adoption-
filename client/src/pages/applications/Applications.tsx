@@ -39,7 +39,12 @@ import {
   upsertApplicationRealtime,
   updateApplicationStatus,
 } from "../../features/applications/applicationSlice";
-import { getSocket } from "../../services/socket";
+import {
+  getRealtimePollMs,
+  getSocket,
+  isRealtimeEnabled,
+} from "../../services/socket";
+import { usePollingEffect } from "../../hooks/usePollingEffect";
 import { gradients } from "../../theme";
 
 const Applications = () => {
@@ -60,6 +65,19 @@ const Applications = () => {
       dispatch(fetchApplications({}));
     }
   }, [dispatch, isAdopter]);
+
+  usePollingEffect(
+    !isRealtimeEnabled(),
+    async () => {
+      if (isAdopter) {
+        await dispatch(fetchMyApplications());
+        return;
+      }
+
+      await dispatch(fetchApplications({}));
+    },
+    getRealtimePollMs()
+  );
 
   useEffect(() => {
     const socket = getSocket();
@@ -192,11 +210,13 @@ const Applications = () => {
                     <Stack direction="row" spacing={1.2} alignItems="center" sx={{ mb: 1 }}>
                       <MarkEmailRead />
                       <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-                        Live updates enabled
+                        {isRealtimeEnabled() ? "Live updates enabled" : "Auto refresh enabled"}
                       </Typography>
                     </Stack>
                     <Typography variant="body2" sx={{ opacity: 0.8 }}>
-                      New submissions and review changes flow into this page automatically when the realtime connection is active.
+                      {isRealtimeEnabled()
+                        ? "New submissions and review changes flow into this page automatically when the realtime connection is active."
+                        : "New submissions and review changes refresh automatically in the background while this page is open."}
                     </Typography>
                   </CardContent>
                 </Card>

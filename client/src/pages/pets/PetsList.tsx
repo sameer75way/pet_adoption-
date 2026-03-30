@@ -27,7 +27,12 @@ import { Search, FilterList, Add, Pets, Tune, Edit } from "@mui/icons-material";
 import { motion } from "framer-motion";
 import type { AppDispatch, RootState } from "../../app/store";
 import { fetchPets } from "../../features/pets/petSlice";
-import { getSocket } from "../../services/socket";
+import {
+  getRealtimePollMs,
+  getSocket,
+  isRealtimeEnabled,
+} from "../../services/socket";
+import { usePollingEffect } from "../../hooks/usePollingEffect";
 import { gradients } from "../../theme";
 
 const PetsList = () => {
@@ -67,6 +72,29 @@ const PetsList = () => {
       })
     );
   }, [dispatch, page, speciesFilter, breedFilter, sizeFilter, statusFilter, searchTerm, ageMin, ageMax, lat, lng, radius]);
+
+  usePollingEffect(
+    !isRealtimeEnabled(),
+    async () => {
+      await dispatch(
+        fetchPets({
+          page,
+          limit: 12,
+          species: speciesFilter || undefined,
+          breed: breedFilter || undefined,
+          size: sizeFilter || undefined,
+          status: statusFilter || undefined,
+          search: searchTerm || undefined,
+          ageMin: ageMin ? Number(ageMin) : undefined,
+          ageMax: ageMax ? Number(ageMax) : undefined,
+          lat: lat ? Number(lat) : undefined,
+          lng: lng ? Number(lng) : undefined,
+          radius: radius ? Number(radius) : undefined,
+        })
+      );
+    },
+    getRealtimePollMs()
+  );
 
   useEffect(() => {
     const socket = getSocket();

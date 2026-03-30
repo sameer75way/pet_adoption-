@@ -13,7 +13,12 @@ import {
 } from "@mui/material";
 import { motion } from "framer-motion";
 import api from "../../services/api";
-import { getSocket } from "../../services/socket";
+import {
+  getRealtimePollMs,
+  getSocket,
+  isRealtimeEnabled,
+} from "../../services/socket";
+import { usePollingEffect } from "../../hooks/usePollingEffect";
 
 interface Conversation {
   _id: string;
@@ -33,17 +38,31 @@ const MessagesPage = () => {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
 
-  useEffect(() => {
-    const loadConversations = async () => {
-      const response = await api.get("/messages/conversations");
-      setConversations(response.data.data);
-      if (response.data.data[0]) {
-        setSelectedConversation(response.data.data[0]._id);
-      }
-    };
+  const loadConversations = async () => {
+    const response = await api.get("/messages/conversations");
+    setConversations(response.data.data);
+    if (!selectedConversation && response.data.data[0]) {
+      setSelectedConversation(response.data.data[0]._id);
+    }
+  };
 
-    loadConversations();
+  const loadMessages = async () => {
+    if (!selectedConversation) return;
+
+    const response = await api.get(`/messages/${selectedConversation}`);
+    setMessages(response.data.data);
+  };
+
+  useEffect(() => {
+    void loadConversations();
   }, []);
+
+  usePollingEffect(!isRealtimeEnabled(), loadConversations, getRealtimePollMs());
+  usePollingEffect(
+    !isRealtimeEnabled() && Boolean(selectedConversation),
+    loadMessages,
+    getRealtimePollMs()
+  );
 
   useEffect(() => {
     if (!selectedConversation) return;
@@ -51,12 +70,7 @@ const MessagesPage = () => {
     const socket = getSocket();
     socket?.emit("conversation:join", selectedConversation);
 
-    const loadMessages = async () => {
-      const response = await api.get(`/messages/${selectedConversation}`);
-      setMessages(response.data.data);
-    };
-
-    loadMessages();
+    void loadMessages();
 
     return () => {
       socket?.emit("conversation:leave", selectedConversation);
@@ -118,6 +132,7 @@ const MessagesPage = () => {
       return [...current, response.data.data];
     });
     setDraft("");
+    void loadConversations();
   };
 
   return (
