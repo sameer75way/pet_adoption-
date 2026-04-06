@@ -40,3 +40,12 @@ This project is a monorepo containing:
    cd server
    npm run dev
    ```
+
+
+5 **Demo User Details**
+
+Login credentials:
+Admin: admin@petadopt.com / password
+Staff: staff@petadopt.com / password
+Adopter: adopter@petadopt.com / password
+
