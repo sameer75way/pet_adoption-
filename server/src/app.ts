@@ -10,7 +10,8 @@ const app = express();
 
 app.use(helmet());
 
-const allowedOrigin = process.env.CLIENT_URL || "*";
+const rawOrigin = process.env.CLIENT_URL || "*";
+const allowedOrigin = rawOrigin !== "*" ? rawOrigin.replace(/\/$/, "") : "*";
 
 app.use(cors({ 
   origin: allowedOrigin, 

@@ -13,7 +13,10 @@ type AuthenticatedSocket = Socket & {
 
 let io: Server | null = null;
 
-const getAllowedOrigin = () => process.env.CLIENT_URL || "*";
+const getAllowedOrigin = () => {
+  const origin = process.env.CLIENT_URL || "*";
+  return origin !== "*" ? origin.replace(/\/$/, "") : "*";
+};
 
 const getUserRoom = (userId: string) => `user:${userId}`;
 const getRoleRoom = (role: string) => `role:${role}`;

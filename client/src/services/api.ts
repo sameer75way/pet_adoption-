@@ -1,7 +1,15 @@
 import axios from "axios";
 
+const getApiUrl = () => {
+  let url = import.meta.env.VITE_API_URL || import.meta.env.VITE_BASE_URL || "http://localhost:5000/api";
+  if (!url.endsWith("/api")) {
+    url = url.replace(/\/$/, "") + "/api";
+  }
+  return url;
+};
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
+  baseURL: getApiUrl(),
   headers: {
     "Content-Type": "application/json",
   },
@@ -31,7 +39,7 @@ api.interceptors.response.use(
       
       try {
         const response = await axios.post(
-          `${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/auth/refresh`,
+          `${getApiUrl()}/auth/refresh`,
           {},
           { withCredentials: true }
         );

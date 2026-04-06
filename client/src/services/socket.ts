@@ -1,7 +1,12 @@
 import { io, type Socket } from "socket.io-client";
 
 let socket: Socket | null = null;
-const apiBaseUrl = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const getApiUrl = () => {
+  let url = import.meta.env.VITE_API_URL || import.meta.env.VITE_BASE_URL || "http://localhost:5000/api";
+  if (!url.endsWith("/api")) url = url.replace(/\/$/, "") + "/api";
+  return url;
+};
+const apiBaseUrl = getApiUrl();
 const realtimeFlag = import.meta.env.VITE_ENABLE_REALTIME;
 const realtimeEnabled =
   realtimeFlag === "true" ||
