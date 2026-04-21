@@ -12,12 +12,28 @@ const app = express();
 
 app.use(helmet());
 
-const rawOrigin = getEnv().CLIENT_URL || "*";
-const allowedOrigin = rawOrigin !== "*" ? rawOrigin.replace(/\/$/, "") : "*";
+const parseAllowedOrigins = (raw: string | undefined) => {
+  const value = (raw || "*").trim();
+  if (!value) {
+    return true;
+  }
+
+  const parts = value
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((item) => (item === "*" ? "*" : item.replace(/\/$/, "")));
+
+  if (parts.length === 0 || parts.includes("*")) {
+    return true;
+  }
+
+  return parts;
+};
 
 app.use(
   cors({
-    origin: allowedOrigin === "*" ? true : allowedOrigin,
+    origin: parseAllowedOrigins(getEnv().CLIENT_URL),
     credentials: true,
   })
 );

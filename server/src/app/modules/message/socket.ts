@@ -15,9 +15,22 @@ type AuthenticatedSocket = Socket & {
 let io: Server | null = null;
 
 const getAllowedOrigin = () => {
-  const origin = getEnv().CLIENT_URL || "*";
-  const cleaned = origin !== "*" ? origin.replace(/\/$/, "") : "*";
-  return cleaned === "*" ? true : cleaned;
+  const origin = (getEnv().CLIENT_URL || "*").trim();
+  if (!origin) {
+    return true;
+  }
+
+  const parts = origin
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map((item) => (item === "*" ? "*" : item.replace(/\/$/, "")));
+
+  if (parts.length === 0 || parts.includes("*")) {
+    return true;
+  }
+
+  return parts;
 };
 
 const getUserRoom = (userId: string) => `user:${userId}`;

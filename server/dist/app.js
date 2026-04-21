@@ -13,10 +13,23 @@ const env_config_1 = require("./app/common/config/env.config");
 const db_config_1 = require("./app/common/config/db.config");
 const app = (0, express_1.default)();
 app.use((0, helmet_1.default)());
-const rawOrigin = (0, env_config_1.getEnv)().CLIENT_URL || "*";
-const allowedOrigin = rawOrigin !== "*" ? rawOrigin.replace(/\/$/, "") : "*";
+const parseAllowedOrigins = (raw) => {
+    const value = (raw || "*").trim();
+    if (!value) {
+        return true;
+    }
+    const parts = value
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .map((item) => (item === "*" ? "*" : item.replace(/\/$/, "")));
+    if (parts.length === 0 || parts.includes("*")) {
+        return true;
+    }
+    return parts;
+};
 app.use((0, cors_1.default)({
-    origin: allowedOrigin === "*" ? true : allowedOrigin,
+    origin: parseAllowedOrigins((0, env_config_1.getEnv)().CLIENT_URL),
     credentials: true,
 }));
 app.use(express_1.default.json());

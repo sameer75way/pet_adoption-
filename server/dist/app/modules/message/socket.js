@@ -9,9 +9,19 @@ const socket_io_1 = require("socket.io");
 const env_config_1 = require("../../common/config/env.config");
 let io = null;
 const getAllowedOrigin = () => {
-    const origin = (0, env_config_1.getEnv)().CLIENT_URL || "*";
-    const cleaned = origin !== "*" ? origin.replace(/\/$/, "") : "*";
-    return cleaned === "*" ? true : cleaned;
+    const origin = ((0, env_config_1.getEnv)().CLIENT_URL || "*").trim();
+    if (!origin) {
+        return true;
+    }
+    const parts = origin
+        .split(",")
+        .map((item) => item.trim())
+        .filter(Boolean)
+        .map((item) => (item === "*" ? "*" : item.replace(/\/$/, "")));
+    if (parts.length === 0 || parts.includes("*")) {
+        return true;
+    }
+    return parts;
 };
 const getUserRoom = (userId) => `user:${userId}`;
 const getRoleRoom = (role) => `role:${role}`;
