@@ -10,13 +10,13 @@ exports.createMedicalRecordSchema = zod_1.z.object({
             "surgery",
             "vet_visit",
             "diagnosis",
-            "prescription"
+            "prescription",
         ]),
-        title: zod_1.z.string(),
-        date: zod_1.z.string(),
+        title: zod_1.z.string().min(1),
+        notes: zod_1.z.string().optional(),
+        date: zod_1.z.string().min(1),
         vetName: zod_1.z.string().optional(),
         vetClinic: zod_1.z.string().optional(),
-        notes: zod_1.z.string().optional()
-    })
+    }),
 });
 //# sourceMappingURL=medical.schema.js.map

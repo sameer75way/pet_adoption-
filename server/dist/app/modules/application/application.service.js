@@ -28,15 +28,16 @@ const submitApplication = async (data, userId) => {
         ...data,
         applicant: userId
     });
-    const staffMember = await user_model_1.User.findOne({
-        role: { $in: ["Admin", "Staff"] }
-    });
-    if (staffMember) {
-        const conversation = await conversation_model_1.Conversation.create({
-            participants: [application.applicant, staffMember._id],
-            relatedApplication: application._id
+    const staffMembers = await user_model_1.User.find({
+        role: { $in: ["Admin", "Staff"] },
+    }).select("_id");
+    if (staffMembers.length > 0) {
+        // Create a single conversation assigning the first available staff member.
+        await conversation_model_1.Conversation.create({
+            participants: [application.applicant, staffMembers[0]._id],
+            relatedApplication: application._id,
         });
-        await (0, notification_service_1.createNotification)(staffMember._id.toString(), "New adoption application", `A new application has been submitted for ${pet.name}.`);
+        await Promise.all(staffMembers.map((staffMember) => (0, notification_service_1.createNotification)(staffMember._id.toString(), "New adoption application", `A new application has been submitted for ${pet.name}.`)));
     }
     const populatedApplication = await application_model_1.Application.findById(application._id)
         .populate("pet")

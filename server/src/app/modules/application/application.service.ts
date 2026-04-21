@@ -36,20 +36,25 @@ export const submitApplication = async (
     applicant: userId
   });
 
-  const staffMember = await User.findOne({
-    role: { $in: ["Admin", "Staff"] }
-  });
+  const staffMembers = await User.find({
+    role: { $in: ["Admin", "Staff"] },
+  }).select("_id");
 
-  if (staffMember) {
-    const conversation = await Conversation.create({
-      participants: [application.applicant, staffMember._id],
-      relatedApplication: application._id
+  if (staffMembers.length > 0) {
+    // Create a single conversation assigning the first available staff member.
+    await Conversation.create({
+      participants: [application.applicant, staffMembers[0]._id],
+      relatedApplication: application._id,
     });
 
-    await createNotification(
-      staffMember._id.toString(),
-      "New adoption application",
-      `A new application has been submitted for ${pet.name}.`
+    await Promise.all(
+      staffMembers.map((staffMember) =>
+        createNotification(
+          staffMember._id.toString(),
+          "New adoption application",
+          `A new application has been submitted for ${pet.name}.`
+        )
+      )
     );
   }
 

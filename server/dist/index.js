@@ -50,6 +50,18 @@ const startServer = async () => {
         server.listen(PORT, () => {
             console.log(`🚀 Server running on port ${PORT}`);
         });
+        const shutdown = () => {
+            console.log("Shutting down server...");
+            server.close(() => {
+                process.exit(0);
+            });
+            // Force shutdown if server doesn't close (e.g. open keep-alive connections)
+            setTimeout(() => {
+                process.exit(1);
+            }, 5000).unref();
+        };
+        process.once("SIGINT", shutdown);
+        process.once("SIGTERM", shutdown);
         const connectDbWithRetry = async () => {
             try {
                 await (0, db_config_1.connectDB)();

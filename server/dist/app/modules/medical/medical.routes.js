@@ -37,10 +37,12 @@ const express_1 = require("express");
 const medicalController = __importStar(require("./medical.controller"));
 const auth_middleware_1 = require("../../common/middlewares/auth.middleware");
 const rbac_middleware_1 = require("../../common/middlewares/rbac.middleware");
+const validate_middleware_1 = require("../../common/middlewares/validate.middleware");
+const medical_schema_1 = require("./validation/medical.schema");
 const router = (0, express_1.Router)();
 router.get("/records", auth_middleware_1.authMiddleware, (0, rbac_middleware_1.requireRole)(["Admin", "Staff"]), medicalController.getAllMedicalRecordsController);
 router.get("/:petId/records", auth_middleware_1.authMiddleware, (0, rbac_middleware_1.requireRole)(["Admin", "Staff"]), medicalController.getMedicalHistoryController);
-router.post("/:petId/records", auth_middleware_1.authMiddleware, (0, rbac_middleware_1.requireRole)(["Admin", "Staff"]), medicalController.addMedicalRecordController);
+router.post("/:petId/records", auth_middleware_1.authMiddleware, (0, rbac_middleware_1.requireRole)(["Admin", "Staff"]), (0, validate_middleware_1.validate)(medical_schema_1.createMedicalRecordSchema), medicalController.addMedicalRecordController);
 router.get("/:petId/summary", medicalController.getMedicalSummaryController);
 exports.default = router;
 //# sourceMappingURL=medical.routes.js.map

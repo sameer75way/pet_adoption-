@@ -9,6 +9,8 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "dev:seed": "npm run seed:all && npm run dev",
+    "smoke:messaging": "node src/scripts/smokeMessaging.js",
+    "smoke:features": "node src/scripts/smokeFeatures.js",
     "seed:all": "npm run seed:users && npm run seed:pets && npm run seed:stories",
     "seed:users": "node -r ts-node/register src/scripts/seedUsers.ts",
     "seed:pets": "node -r ts-node/register src/scripts/seedPets.ts",

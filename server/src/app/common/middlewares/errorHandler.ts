@@ -15,6 +15,8 @@ export const errorHandler = (
       ? err.statusCode
       : typeof err?.statusCode === "number"
         ? err.statusCode
+        : err?.name === "ValidationError"
+          ? 400
         : err?.name === "CastError"
           ? 400
           : 500;

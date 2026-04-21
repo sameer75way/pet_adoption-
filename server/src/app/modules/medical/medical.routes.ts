@@ -2,6 +2,8 @@ import { Router } from "express";
 import * as medicalController from "./medical.controller";
 import { authMiddleware } from "../../common/middlewares/auth.middleware";
 import { requireRole } from "../../common/middlewares/rbac.middleware";
+import { validate } from "../../common/middlewares/validate.middleware";
+import { createMedicalRecordSchema } from "./validation/medical.schema";
 
 const router = Router();
 
@@ -23,6 +25,7 @@ router.post(
   "/:petId/records",
   authMiddleware,
   requireRole(["Admin", "Staff"]),
+  validate(createMedicalRecordSchema),
   medicalController.addMedicalRecordController
 );
 

@@ -8,9 +8,11 @@ const errorHandler = (err, req, res, next) => {
         ? err.statusCode
         : typeof err?.statusCode === "number"
             ? err.statusCode
-            : err?.name === "CastError"
+            : err?.name === "ValidationError"
                 ? 400
-                : 500;
+                : err?.name === "CastError"
+                    ? 400
+                    : 500;
     res.status(statusCode).json({
         success: false,
         message: err.message || "Internal Server Error",
