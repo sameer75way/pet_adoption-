@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.revokeRefreshToken = exports.verifyRefreshToken = exports.storeRefreshToken = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const refreshToken_model_1 = require("./refreshToken.model");
+const env_config_1 = require("../../common/config/env.config");
+const httpErrors_1 = require("../../common/errors/httpErrors");
 const storeRefreshToken = async (userId, token) => {
     const expires = new Date();
     expires.setDate(expires.getDate() + 7);
@@ -19,9 +21,9 @@ exports.storeRefreshToken = storeRefreshToken;
 const verifyRefreshToken = async (token) => {
     const stored = await refreshToken_model_1.RefreshToken.findOne({ token });
     if (!stored) {
-        throw new Error("Invalid refresh token");
+        throw (0, httpErrors_1.unauthorized)("Invalid refresh token");
     }
-    const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_REFRESH_SECRET);
+    const decoded = jsonwebtoken_1.default.verify(token, (0, env_config_1.getEnv)().JWT_REFRESH_SECRET);
     return decoded;
 };
 exports.verifyRefreshToken = verifyRefreshToken;

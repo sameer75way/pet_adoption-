@@ -3,6 +3,7 @@ import { Pet } from "../pet/pet.model";
 import { User } from "../user/user.model";
 import { createNotification } from "../notification/notification.service";
 import { emitPetsUpdated, emitToRoles, emitToUser } from "../message/socket";
+import { conflict, notFound } from "../../common/errors/httpErrors";
 
 export const getApplicants = async () => {
   return User.find({
@@ -28,14 +29,14 @@ export const registerFoster = async (userId: string) => {
 
   const user = await User.findById(userId);
 
-  if (!user) throw new Error("User not found");
+  if (!user) throw notFound("User not found");
 
   if (user.isFosterApproved) {
-    throw new Error("You are already approved as a foster parent");
+    throw conflict("You are already approved as a foster parent");
   }
 
   if (user.fosterRegistrationSubmitted) {
-    throw new Error("Your foster registration is already under review");
+    throw conflict("Your foster registration is already under review");
   }
 
   user.isFosterApproved = false;
@@ -60,7 +61,7 @@ export const approveFoster = async (userId: string) => {
 
   const user = await User.findById(userId);
 
-  if (!user) throw new Error("User not found");
+  if (!user) throw notFound("User not found");
 
   user.isFosterApproved = true;
   user.fosterRegistrationSubmitted = false;
@@ -128,7 +129,7 @@ export const returnPetFromFoster = async (assignmentId: string) => {
     assignmentId
   );
 
-  if (!assignment) throw new Error("Assignment not found");
+  if (!assignment) throw notFound("Assignment not found");
 
   assignment.status = "completed";
   assignment.actualEndDate = new Date();

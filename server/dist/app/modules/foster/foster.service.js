@@ -6,6 +6,7 @@ const pet_model_1 = require("../pet/pet.model");
 const user_model_1 = require("../user/user.model");
 const notification_service_1 = require("../notification/notification.service");
 const socket_1 = require("../message/socket");
+const httpErrors_1 = require("../../common/errors/httpErrors");
 const getApplicants = async () => {
     return user_model_1.User.find({
         role: "Adopter",
@@ -28,12 +29,12 @@ exports.getAssignments = getAssignments;
 const registerFoster = async (userId) => {
     const user = await user_model_1.User.findById(userId);
     if (!user)
-        throw new Error("User not found");
+        throw (0, httpErrors_1.notFound)("User not found");
     if (user.isFosterApproved) {
-        throw new Error("You are already approved as a foster parent");
+        throw (0, httpErrors_1.conflict)("You are already approved as a foster parent");
     }
     if (user.fosterRegistrationSubmitted) {
-        throw new Error("Your foster registration is already under review");
+        throw (0, httpErrors_1.conflict)("Your foster registration is already under review");
     }
     user.isFosterApproved = false;
     user.fosterRegistrationSubmitted = true;
@@ -47,7 +48,7 @@ exports.registerFoster = registerFoster;
 const approveFoster = async (userId) => {
     const user = await user_model_1.User.findById(userId);
     if (!user)
-        throw new Error("User not found");
+        throw (0, httpErrors_1.notFound)("User not found");
     user.isFosterApproved = true;
     user.fosterRegistrationSubmitted = false;
     await user.save();
@@ -88,7 +89,7 @@ exports.assignPetToFoster = assignPetToFoster;
 const returnPetFromFoster = async (assignmentId) => {
     const assignment = await foster_model_1.FosterAssignment.findById(assignmentId);
     if (!assignment)
-        throw new Error("Assignment not found");
+        throw (0, httpErrors_1.notFound)("Assignment not found");
     assignment.status = "completed";
     assignment.actualEndDate = new Date();
     await assignment.save();

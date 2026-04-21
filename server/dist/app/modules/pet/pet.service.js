@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.setPrimaryPhoto = exports.deletePetPhoto = exports.addPetPhoto = exports.updatePetStatus = exports.deletePet = exports.updatePet = exports.getPetById = exports.getPets = exports.createPet = void 0;
 const pet_model_1 = require("./pet.model");
 const cloudinary_config_1 = __importDefault(require("../../common/config/cloudinary.config"));
+const httpErrors_1 = require("../../common/errors/httpErrors");
+const cloudinary_config_2 = require("../../common/config/cloudinary.config");
 /**
  * Generate Intake ID
  */
@@ -107,7 +109,7 @@ const getPetById = async (id) => {
         deletedAt: null
     });
     if (!pet) {
-        throw new Error("Pet not found");
+        throw (0, httpErrors_1.notFound)("Pet not found");
     }
     return pet;
 };
@@ -121,7 +123,7 @@ const updatePet = async (id, data) => {
         deletedAt: null
     });
     if (!pet)
-        throw new Error("Pet not found");
+        throw (0, httpErrors_1.notFound)("Pet not found");
     Object.assign(pet, data);
     await pet.save();
     return pet;
@@ -136,7 +138,7 @@ const deletePet = async (id) => {
         deletedAt: null
     });
     if (!pet)
-        throw new Error("Pet not found");
+        throw (0, httpErrors_1.notFound)("Pet not found");
     pet.deletedAt = new Date();
     await pet.save();
     return { message: "Pet deleted" };
@@ -162,11 +164,11 @@ const updatePetStatus = async (id, newStatus) => {
         deletedAt: null
     });
     if (!pet)
-        throw new Error("Pet not found");
+        throw (0, httpErrors_1.notFound)("Pet not found");
     const currentStatus = pet.status;
     const allowed = allowedTransitions[currentStatus];
     if (!allowed.includes(newStatus)) {
-        throw new Error(`Invalid status transition: ${currentStatus} → ${newStatus}`);
+        throw (0, httpErrors_1.badRequest)(`Invalid status transition: ${currentStatus} → ${newStatus}`);
     }
     pet.status = newStatus;
     if (newStatus === "adopted") {
@@ -185,7 +187,7 @@ const addPetPhoto = async (petId, file) => {
         deletedAt: null
     });
     if (!pet)
-        throw new Error("Pet not found");
+        throw (0, httpErrors_1.notFound)("Pet not found");
     pet.photos.push({
         url: file.path,
         publicId: file.filename,
@@ -204,10 +206,13 @@ const deletePetPhoto = async (petId, publicId) => {
         deletedAt: null
     });
     if (!pet)
-        throw new Error("Pet not found");
+        throw (0, httpErrors_1.notFound)("Pet not found");
     const photoToDelete = pet.photos.find((photo) => photo.publicId === publicId);
     if (!photoToDelete) {
-        throw new Error("Photo not found");
+        throw (0, httpErrors_1.notFound)("Photo not found");
+    }
+    if (!(0, cloudinary_config_2.isCloudinaryConfigured)()) {
+        throw (0, httpErrors_1.serviceUnavailable)("Image deletion is unavailable (Cloudinary is not configured)");
     }
     await cloudinary_config_1.default.uploader.destroy(publicId);
     pet.photos = pet.photos.filter((p) => p.publicId !== publicId);
@@ -227,7 +232,7 @@ const setPrimaryPhoto = async (petId, photoId) => {
         deletedAt: null
     });
     if (!pet)
-        throw new Error("Pet not found");
+        throw (0, httpErrors_1.notFound)("Pet not found");
     // Remove primary from all photos
     pet.photos.forEach((photo) => {
         photo.isPrimary = false;
@@ -235,7 +240,7 @@ const setPrimaryPhoto = async (petId, photoId) => {
     // Set selected as primary
     const targetPhoto = pet.photos.find((photo) => photo.publicId === photoId);
     if (!targetPhoto) {
-        throw new Error("Photo not found");
+        throw (0, httpErrors_1.notFound)("Photo not found");
     }
     targetPhoto.isPrimary = true;
     await pet.save();

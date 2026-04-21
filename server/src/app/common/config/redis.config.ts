@@ -1,10 +1,17 @@
 import Redis from "ioredis";
+import { getEnv } from "./env.config";
 
 let redisClient: Redis | null = null;
 
-export const getRedisClient = (): Redis => {
+export const getRedisClient = (): Redis | null => {
   if (!redisClient) {
-    redisClient = new Redis(process.env.REDIS_URL as string);
+    const { REDIS_URL } = getEnv();
+    if (!REDIS_URL) {
+      console.log("Redis disabled (REDIS_URL not set)");
+      return null;
+    }
+
+    redisClient = new Redis(REDIS_URL);
     redisClient.on("connect", () => {
       console.log("Redis connected");
     });

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import {
@@ -53,7 +53,7 @@ const Navbar = () => {
   const [mobileMenuAnchor, setMobileMenuAnchor] = useState<null | HTMLElement>(null);
   const [notificationCount, setNotificationCount] = useState(0);
 
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     if (!isAuthenticated) {
       setNotificationCount(0);
       return;
@@ -66,11 +66,17 @@ const Navbar = () => {
     } catch {
       setNotificationCount(0);
     }
-  };
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    void loadNotifications();
-  }, [isAuthenticated]);
+    const timeoutId = window.setTimeout(() => {
+      void loadNotifications();
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [loadNotifications]);
 
   usePollingEffect(
     !isRealtimeEnabled() && isAuthenticated,

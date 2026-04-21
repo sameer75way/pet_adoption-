@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -38,24 +38,30 @@ const MessagesPage = () => {
   const [selectedConversation, setSelectedConversation] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
 
-  const loadConversations = async () => {
+  const loadConversations = useCallback(async () => {
     const response = await api.get("/messages/conversations");
-    setConversations(response.data.data);
-    if (!selectedConversation && response.data.data[0]) {
-      setSelectedConversation(response.data.data[0]._id);
-    }
-  };
+    const data = response.data.data as Conversation[];
+    setConversations(data);
+    setSelectedConversation((current) => current ?? data?.[0]?._id ?? null);
+  }, []);
 
-  const loadMessages = async () => {
-    if (!selectedConversation) return;
+  const loadMessages = useCallback(async () => {
+    if (!selectedConversation) {
+      return;
+    }
 
     const response = await api.get(`/messages/${selectedConversation}`);
     setMessages(response.data.data);
-  };
+  }, [selectedConversation]);
 
   useEffect(() => {
-    void loadConversations();
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      void loadConversations();
+    }, 0);
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [loadConversations]);
 
   usePollingEffect(!isRealtimeEnabled(), loadConversations, getRealtimePollMs());
   usePollingEffect(
@@ -70,12 +76,15 @@ const MessagesPage = () => {
     const socket = getSocket();
     socket?.emit("conversation:join", selectedConversation);
 
-    void loadMessages();
+    const timeoutId = window.setTimeout(() => {
+      void loadMessages();
+    }, 0);
 
     return () => {
+      window.clearTimeout(timeoutId);
       socket?.emit("conversation:leave", selectedConversation);
     };
-  }, [selectedConversation]);
+  }, [loadMessages, selectedConversation]);
 
   useEffect(() => {
     const socket = getSocket();

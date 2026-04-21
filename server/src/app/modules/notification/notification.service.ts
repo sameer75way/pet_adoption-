@@ -1,5 +1,6 @@
 import { Notification } from "./notification.model";
 import { emitToUser } from "../message/socket";
+import { notFound } from "../../common/errors/httpErrors";
 
 export const createNotification = async (
   userId: string,
@@ -39,7 +40,7 @@ export const markNotificationRead = async (
   );
 
   if (!notification) {
-    throw new Error("Notification not found");
+    throw notFound("Notification not found");
   }
 
   if (notification?.user) {

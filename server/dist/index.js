@@ -10,7 +10,16 @@ const app_1 = __importDefault(require("./app"));
 const db_config_1 = require("./app/common/config/db.config");
 const redis_config_1 = require("./app/common/config/redis.config");
 const socket_1 = require("./app/modules/message/socket");
-const PORT = process.env.PORT || 5000;
+const env_config_1 = require("./app/common/config/env.config");
+let PORT = 5000;
+try {
+    const env = (0, env_config_1.getEnv)();
+    PORT = env.PORT;
+}
+catch (error) {
+    console.error("Invalid environment configuration:", error);
+    process.exit(1);
+}
 /*
 |--------------------------------------------------------------------------
 | Create HTTP Server
@@ -38,14 +47,23 @@ const server = http_1.default.createServer(app_1.default);
 const startServer = async () => {
     try {
         console.log("Starting server...");
-        // MongoDB connection
-        await (0, db_config_1.connectDB)();
-        console.log("MongoDB connected");
-        // Redis connection - ioredis connects automatically
-        (0, redis_config_1.getRedisClient)();
         server.listen(PORT, () => {
             console.log(`🚀 Server running on port ${PORT}`);
         });
+        const connectDbWithRetry = async () => {
+            try {
+                await (0, db_config_1.connectDB)();
+                console.log("MongoDB connected");
+            }
+            catch (error) {
+                console.error("MongoDB connection failed (retrying in 5s):", error);
+                setTimeout(connectDbWithRetry, 5000);
+            }
+        };
+        // Start connecting to MongoDB in the background (keeps server up for /health)
+        void connectDbWithRetry();
+        // Redis connection - optional
+        (0, redis_config_1.getRedisClient)();
     }
     catch (error) {
         console.error("Server failed to start:", error);

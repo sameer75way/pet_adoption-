@@ -1,6 +1,7 @@
 import { Message } from "./message.model";
 import { Conversation } from "./conversation.model";
 import { emitToConversation, emitToUser } from "./socket";
+import { notFound } from "../../common/errors/httpErrors";
 
 const ensureConversationParticipant = async (
   conversationId: string,
@@ -12,7 +13,7 @@ const ensureConversationParticipant = async (
   });
 
   if (!conversation) {
-    throw new Error("Conversation not found");
+    throw notFound("Conversation not found");
   }
 
   return conversation;

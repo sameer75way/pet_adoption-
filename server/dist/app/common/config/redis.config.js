@@ -5,10 +5,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getRedisClient = void 0;
 const ioredis_1 = __importDefault(require("ioredis"));
+const env_config_1 = require("./env.config");
 let redisClient = null;
 const getRedisClient = () => {
     if (!redisClient) {
-        redisClient = new ioredis_1.default(process.env.REDIS_URL);
+        const { REDIS_URL } = (0, env_config_1.getEnv)();
+        if (!REDIS_URL) {
+            console.log("Redis disabled (REDIS_URL not set)");
+            return null;
+        }
+        redisClient = new ioredis_1.default(REDIS_URL);
         redisClient.on("connect", () => {
             console.log("Redis connected");
         });

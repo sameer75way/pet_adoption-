@@ -1,6 +1,7 @@
 import http from "http";
 import jwt from "jsonwebtoken";
 import { Server, Socket } from "socket.io";
+import { getEnv } from "../../common/config/env.config";
 
 type AuthenticatedSocket = Socket & {
   data: {
@@ -14,8 +15,9 @@ type AuthenticatedSocket = Socket & {
 let io: Server | null = null;
 
 const getAllowedOrigin = () => {
-  const origin = process.env.CLIENT_URL || "*";
-  return origin !== "*" ? origin.replace(/\/$/, "") : "*";
+  const origin = getEnv().CLIENT_URL || "*";
+  const cleaned = origin !== "*" ? origin.replace(/\/$/, "") : "*";
+  return cleaned === "*" ? true : cleaned;
 };
 
 const getUserRoom = (userId: string) => `user:${userId}`;
@@ -43,7 +45,7 @@ export const initSocket = (server: http.Server) => {
     try {
       const decoded = jwt.verify(
         token,
-        process.env.JWT_ACCESS_SECRET!
+        getEnv().JWT_ACCESS_SECRET
       ) as { id: string; role: string };
 
       socket.data.user = {

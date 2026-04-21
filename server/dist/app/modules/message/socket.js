@@ -6,8 +6,13 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.emitPetsUpdated = exports.emitToConversation = exports.emitToRoles = exports.emitToUser = exports.getIO = exports.initSocket = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const socket_io_1 = require("socket.io");
+const env_config_1 = require("../../common/config/env.config");
 let io = null;
-const getAllowedOrigin = () => process.env.CLIENT_URL || "*";
+const getAllowedOrigin = () => {
+    const origin = (0, env_config_1.getEnv)().CLIENT_URL || "*";
+    const cleaned = origin !== "*" ? origin.replace(/\/$/, "") : "*";
+    return cleaned === "*" ? true : cleaned;
+};
 const getUserRoom = (userId) => `user:${userId}`;
 const getRoleRoom = (role) => `role:${role}`;
 const getConversationRoom = (conversationId) => `conversation:${conversationId}`;
@@ -25,7 +30,7 @@ const initSocket = (server) => {
             return next(new Error("Unauthorized"));
         }
         try {
-            const decoded = jsonwebtoken_1.default.verify(token, process.env.JWT_ACCESS_SECRET);
+            const decoded = jsonwebtoken_1.default.verify(token, (0, env_config_1.getEnv)().JWT_ACCESS_SECRET);
             socket.data.user = {
                 id: decoded.id,
                 role: decoded.role,

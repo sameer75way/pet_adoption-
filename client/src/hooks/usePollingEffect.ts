@@ -14,12 +14,17 @@ export const usePollingEffect = (
       return;
     }
 
+    const timeoutId = window.setTimeout(() => {
+      onTick();
+    }, 0);
+
     const intervalId = window.setInterval(() => {
       onTick();
     }, intervalMs);
 
     return () => {
+      window.clearTimeout(timeoutId);
       window.clearInterval(intervalId);
     };
-  }, [enabled, intervalMs, onTick]);
+  }, [enabled, intervalMs]);
 };

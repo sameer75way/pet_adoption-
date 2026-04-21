@@ -1,4 +1,7 @@
 import mongoose from "mongoose";
+import { getEnv } from "./env.config";
+
+export const isDbConnected = () => mongoose.connection.readyState === 1;
 
 export const connectDB = async () => {
   try {
@@ -6,7 +9,8 @@ export const connectDB = async () => {
       return;
     }
 
-    await mongoose.connect(process.env.MONGODB_URI as string);
+    const { MONGODB_URI } = getEnv();
+    await mongoose.connect(MONGODB_URI);
 
     console.log("MongoDB Connected");
   } catch (error) {

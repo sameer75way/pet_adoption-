@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   Alert,
   Box,
@@ -31,7 +31,7 @@ const NotificationsPage = () => {
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const loadNotifications = async () => {
+  const loadNotifications = useCallback(async () => {
     try {
       const response = await api.get("/notifications");
       setNotifications(response.data.data);
@@ -39,11 +39,16 @@ const NotificationsPage = () => {
       const err = loadError as { response?: { data?: { message?: string } } };
       setError(err.response?.data?.message || "Failed to load notifications");
     }
-  };
+  }, []);
 
   useEffect(() => {
-    void loadNotifications();
-  }, []);
+    const timeoutId = window.setTimeout(() => {
+      void loadNotifications();
+    }, 0);
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [loadNotifications]);
 
   usePollingEffect(!isRealtimeEnabled(), loadNotifications, getRealtimePollMs());
 

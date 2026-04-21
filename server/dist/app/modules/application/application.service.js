@@ -7,6 +7,7 @@ const user_model_1 = require("../user/user.model");
 const conversation_model_1 = require("../message/conversation.model");
 const notification_service_1 = require("../notification/notification.service");
 const socket_1 = require("../message/socket");
+const httpErrors_1 = require("../../common/errors/httpErrors");
 const submitApplication = async (data, userId) => {
     const existing = await application_model_1.Application.findOne({
         pet: data.pet,
@@ -14,14 +15,14 @@ const submitApplication = async (data, userId) => {
         status: { $nin: ["rejected", "withdrawn"] }
     });
     if (existing) {
-        throw new Error("You already have an active application for this pet");
+        throw (0, httpErrors_1.conflict)("You already have an active application for this pet");
     }
     const pet = await pet_model_1.Pet.findById(data.pet);
     if (!pet) {
-        throw new Error("Pet not found");
+        throw (0, httpErrors_1.notFound)("Pet not found");
     }
     if (pet.status !== "available") {
-        throw new Error("This pet is not currently available for adoption");
+        throw (0, httpErrors_1.badRequest)("This pet is not currently available for adoption");
     }
     const application = await application_model_1.Application.create({
         ...data,
@@ -85,7 +86,7 @@ exports.getApplications = getApplications;
 const updateApplicationStatus = async (id, status, reason) => {
     const application = await application_model_1.Application.findById(id);
     if (!application) {
-        throw new Error("Application not found");
+        throw (0, httpErrors_1.notFound)("Application not found");
     }
     const currentStatus = application.status;
     if (currentStatus === "submitted" && status === "under_review") {
@@ -102,7 +103,7 @@ const updateApplicationStatus = async (id, status, reason) => {
         application.rejectionReason = reason;
     }
     else {
-        throw new Error("Invalid status transition");
+        throw (0, httpErrors_1.badRequest)("Invalid status transition");
     }
     await application.save();
     const populatedApplication = await application_model_1.Application.findById(application._id)

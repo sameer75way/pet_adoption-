@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.markNotificationRead = exports.getNotifications = exports.createNotification = void 0;
 const notification_model_1 = require("./notification.model");
 const socket_1 = require("../message/socket");
+const httpErrors_1 = require("../../common/errors/httpErrors");
 const createNotification = async (userId, title, message) => {
     const notification = await notification_model_1.Notification.create({
         user: userId,
@@ -24,7 +25,7 @@ const markNotificationRead = async (notificationId, userId) => {
         user: userId
     }, { isRead: true }, { returnDocument: "after" });
     if (!notification) {
-        throw new Error("Notification not found");
+        throw (0, httpErrors_1.notFound)("Notification not found");
     }
     if (notification?.user) {
         (0, socket_1.emitToUser)(notification.user.toString(), "notification:updated", notification);

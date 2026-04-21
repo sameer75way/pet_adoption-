@@ -4,13 +4,14 @@ exports.sendMessage = exports.getMessages = exports.createConversation = exports
 const message_model_1 = require("./message.model");
 const conversation_model_1 = require("./conversation.model");
 const socket_1 = require("./socket");
+const httpErrors_1 = require("../../common/errors/httpErrors");
 const ensureConversationParticipant = async (conversationId, userId) => {
     const conversation = await conversation_model_1.Conversation.findOne({
         _id: conversationId,
         participants: userId
     });
     if (!conversation) {
-        throw new Error("Conversation not found");
+        throw (0, httpErrors_1.notFound)("Conversation not found");
     }
     return conversation;
 };

@@ -7,8 +7,17 @@ import app from "./app";
 import { connectDB } from "./app/common/config/db.config";
 import { getRedisClient } from "./app/common/config/redis.config";
 import { initSocket } from "./app/modules/message/socket";
+import { getEnv } from "./app/common/config/env.config";
 
-const PORT = process.env.PORT || 5000;
+let PORT = 5000;
+
+try {
+  const env = getEnv();
+  PORT = env.PORT;
+} catch (error) {
+  console.error("Invalid environment configuration:", error);
+  process.exit(1);
+}
 
 /*
 |--------------------------------------------------------------------------
@@ -43,16 +52,25 @@ const startServer = async () => {
   try {
     console.log("Starting server...");
 
-    // MongoDB connection
-    await connectDB();
-    console.log("MongoDB connected");
-
-    // Redis connection - ioredis connects automatically
-    getRedisClient();
-
     server.listen(PORT, () => {
       console.log(`🚀 Server running on port ${PORT}`);
     });
+
+    const connectDbWithRetry = async () => {
+      try {
+        await connectDB();
+        console.log("MongoDB connected");
+      } catch (error) {
+        console.error("MongoDB connection failed (retrying in 5s):", error);
+        setTimeout(connectDbWithRetry, 5000);
+      }
+    };
+
+    // Start connecting to MongoDB in the background (keeps server up for /health)
+    void connectDbWithRetry();
+
+    // Redis connection - optional
+    getRedisClient();
 
   } catch (error) {
 

@@ -8,12 +8,14 @@ const bcrypt_1 = __importDefault(require("bcrypt"));
 const token_service_1 = require("../token/token.service");
 const user_model_1 = require("../user/user.model");
 const jwt_utils_1 = require("../../common/utils/jwt.utils");
+const env_config_1 = require("../../common/config/env.config");
+const httpErrors_1 = require("../../common/errors/httpErrors");
 const registerService = async (data) => {
     const existingUser = await user_model_1.User.findOne({ email: data.email });
     if (existingUser) {
-        throw new Error("User already exists");
+        throw (0, httpErrors_1.conflict)("User already exists");
     }
-    const hashedPassword = await bcrypt_1.default.hash(data.password, Number(process.env.BCRYPT_ROUNDS));
+    const hashedPassword = await bcrypt_1.default.hash(data.password, (0, env_config_1.getEnv)().BCRYPT_ROUNDS);
     const user = await user_model_1.User.create({
         ...data,
         password: hashedPassword,
@@ -25,10 +27,10 @@ exports.registerService = registerService;
 const loginService = async (data) => {
     const user = await user_model_1.User.findOne({ email: data.email });
     if (!user)
-        throw new Error("Invalid credentials");
+        throw (0, httpErrors_1.unauthorized)("Invalid credentials");
     const match = await bcrypt_1.default.compare(data.password, user.password);
     if (!match)
-        throw new Error("Invalid credentials");
+        throw (0, httpErrors_1.unauthorized)("Invalid credentials");
     const accessToken = (0, jwt_utils_1.signAccessToken)({
         id: user._id,
         role: user.role

@@ -4,6 +4,7 @@ import { User } from "../user/user.model";
 import { Conversation } from "../message/conversation.model";
 import { createNotification } from "../notification/notification.service";
 import { emitToRoles, emitToUser } from "../message/socket";
+import { badRequest, conflict, notFound } from "../../common/errors/httpErrors";
 
 export const submitApplication = async (
   data: any,
@@ -17,19 +18,17 @@ export const submitApplication = async (
   });
 
   if (existing) {
-    throw new Error(
-      "You already have an active application for this pet"
-    );
+    throw conflict("You already have an active application for this pet");
   }
 
   const pet = await Pet.findById(data.pet);
 
   if (!pet) {
-    throw new Error("Pet not found");
+    throw notFound("Pet not found");
   }
 
   if (pet.status !== "available") {
-    throw new Error("This pet is not currently available for adoption");
+    throw badRequest("This pet is not currently available for adoption");
   }
 
   const application = await Application.create({
@@ -120,7 +119,7 @@ export const updateApplicationStatus = async (
   const application = await Application.findById(id);
 
   if (!application) {
-    throw new Error("Application not found");
+    throw notFound("Application not found");
   }
 
   const currentStatus = application.status;
@@ -149,7 +148,7 @@ export const updateApplicationStatus = async (
 
   else {
 
-    throw new Error("Invalid status transition");
+    throw badRequest("Invalid status transition");
 
   }
 

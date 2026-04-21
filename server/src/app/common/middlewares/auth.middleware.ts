@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { getEnv } from "../config/env.config";
 
 // Extend Express Request type to include user
 declare global {
@@ -25,7 +26,7 @@ export const authMiddleware = (
   try {
     const decoded = jwt.verify(
       token,
-      process.env.JWT_ACCESS_SECRET!
+      getEnv().JWT_ACCESS_SECRET
     );
 
     req.user = decoded;

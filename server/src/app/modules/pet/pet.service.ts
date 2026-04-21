@@ -1,5 +1,7 @@
 import { Pet, IPet, PetStatus } from "./pet.model";
 import cloudinary from "../../common/config/cloudinary.config";
+import { badRequest, notFound, serviceUnavailable } from "../../common/errors/httpErrors";
+import { isCloudinaryConfigured } from "../../common/config/cloudinary.config";
 
 /**
  * Generate Intake ID
@@ -136,7 +138,7 @@ export const getPetById = async (id: string) => {
   });
 
   if (!pet) {
-    throw new Error("Pet not found");
+    throw notFound("Pet not found");
   }
 
   return pet;
@@ -152,7 +154,7 @@ export const updatePet = async (id: string, data: Partial<IPet>) => {
     deletedAt: null
   });
 
-  if (!pet) throw new Error("Pet not found");
+  if (!pet) throw notFound("Pet not found");
 
   Object.assign(pet, data);
 
@@ -171,7 +173,7 @@ export const deletePet = async (id: string) => {
     deletedAt: null
   });
 
-  if (!pet) throw new Error("Pet not found");
+  if (!pet) throw notFound("Pet not found");
 
   pet.deletedAt = new Date();
 
@@ -205,14 +207,14 @@ export const updatePetStatus = async (
     deletedAt: null
   });
 
-  if (!pet) throw new Error("Pet not found");
+  if (!pet) throw notFound("Pet not found");
 
   const currentStatus = pet.status;
 
   const allowed = allowedTransitions[currentStatus];
 
   if (!allowed.includes(newStatus)) {
-    throw new Error(
+    throw badRequest(
       `Invalid status transition: ${currentStatus} → ${newStatus}`
     );
   }
@@ -241,7 +243,7 @@ export const addPetPhoto = async (
     deletedAt: null
   });
 
-  if (!pet) throw new Error("Pet not found");
+  if (!pet) throw notFound("Pet not found");
 
   pet.photos.push({
     url: file.path,
@@ -267,14 +269,18 @@ export const deletePetPhoto = async (
     deletedAt: null
   });
 
-  if (!pet) throw new Error("Pet not found");
+  if (!pet) throw notFound("Pet not found");
 
   const photoToDelete = pet.photos.find(
     (photo) => photo.publicId === publicId
   );
 
   if (!photoToDelete) {
-    throw new Error("Photo not found");
+    throw notFound("Photo not found");
+  }
+
+  if (!isCloudinaryConfigured()) {
+    throw serviceUnavailable("Image deletion is unavailable (Cloudinary is not configured)");
   }
 
   await cloudinary.uploader.destroy(publicId);
@@ -305,7 +311,7 @@ export const setPrimaryPhoto = async (
     deletedAt: null
   });
 
-  if (!pet) throw new Error("Pet not found");
+  if (!pet) throw notFound("Pet not found");
 
   // Remove primary from all photos
   pet.photos.forEach((photo) => {
@@ -318,7 +324,7 @@ export const setPrimaryPhoto = async (
   );
 
   if (!targetPhoto) {
-    throw new Error("Photo not found");
+    throw notFound("Photo not found");
   }
 
   targetPhoto.isPrimary = true;
