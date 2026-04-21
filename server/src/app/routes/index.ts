@@ -11,6 +11,7 @@ import messageRoutes from "../modules/message/message.routes";
 import analyticsRoutes from "../modules/analytics/analytics.routes";
 import notificationRoutes from "../modules/notification/notification.routes";
 import storyRoutes from "../modules/story/story.routes";
+import chatRoutes from "../modules/chat/chat.routes";
 
 const router = Router();
 
@@ -58,6 +59,10 @@ const moduleRoutes = [
   {
     path: "/stories",
     route: storyRoutes
+  },
+  {
+    path: "/chat",
+    route: chatRoutes
   }
 ];
 

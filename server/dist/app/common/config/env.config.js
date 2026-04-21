@@ -16,6 +16,8 @@ const envSchema = zod_1.z.object({
     CLOUDINARY_CLOUD_NAME: zod_1.z.string().optional(),
     CLOUDINARY_API_KEY: zod_1.z.string().optional(),
     CLOUDINARY_API_SECRET: zod_1.z.string().optional(),
+    GEMINI_API_KEY: zod_1.z.string().optional(),
+    GEMINI_MODEL: zod_1.z.string().optional(),
 });
 let cachedEnv = null;
 const getEnv = () => {

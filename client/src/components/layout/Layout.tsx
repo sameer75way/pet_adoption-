@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Navbar from "./Navbar";
 import Footer from "./Footer";
 import { gradients } from "../../theme";
+import ChatbotWidget from "../chat/ChatbotWidget";
 
 const Layout = () => {
   const location = useLocation();
@@ -64,6 +65,7 @@ const Layout = () => {
           </motion.div>
         </AnimatePresence>
       </Box>
+      <ChatbotWidget />
       <Footer />
     </Box>
   );

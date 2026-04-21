@@ -222,9 +222,26 @@ const main = async () => {
   const adopterSocket = connectAuthedSocket(adopter.token);
   await waitForEvent(adopterSocket, "connect", 5000);
 
-  const adopterNotificationPromise = waitForEvent(adopterSocket, "notification:new", 5000);
-  await jsonRequest("/api/foster/register", { method: "POST", token: adopter.token, body: {} });
-  await adopterNotificationPromise;
+  try {
+    const adopterNotificationPromise = waitForEvent(
+      adopterSocket,
+      "notification:new",
+      5000
+    );
+    await jsonRequest("/api/foster/register", {
+      method: "POST",
+      token: adopter.token,
+      body: {},
+    });
+    await adopterNotificationPromise;
+  } catch (error) {
+    // Allow re-running smoke tests against a DB that already has this adopter approved/registered.
+    if (error?.message?.includes?.("already")) {
+      console.warn("Skipping foster register step:", error.message);
+    } else {
+      throw error;
+    }
+  }
 
   await jsonRequest(`/api/foster/${adopter.user._id}/approve`, {
     method: "PATCH",
